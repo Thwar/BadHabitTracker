@@ -1,0 +1,95 @@
+﻿@page "/events"
+@using ThomasCalendar.Business
+@using ThomasCalendar.Models
+@inject Blazored.LocalStorage.ILocalStorageService localStore
+@inject DateState DateState
+@*<h1>Todo (@todos.Count(todo => !todo.IsDone))</h1>*@
+
+
+<h1>Events</h1>
+
+<div class="form-group">
+    <ul class="list-group">
+        @if (DateState?.Container?.Settings != null)
+        {
+            @foreach (var eventName in DateState.Container.Settings.Event)
+            {
+                string name = eventName;
+
+                <li class="list-group-item">
+                    @*<input type="checkbox" @bind="todo.IsDone" />*@
+
+                    <div class="input-group row col-sm-6">
+                        <input disabled="disabled" class="form-control" @bind="name" />
+                        <div class="input-group-append">
+                            <button class="btn btn-danger" @onclick="(()=>RemoveEvent(name))">Remove</button>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-6">
+                    </div>
+
+                </li>
+            }
+        }
+
+    </ul>
+</div>
+
+<br />
+
+
+<div class="input-group row form-group col-sm-6">
+    <input placeholder="Event/Activity Name" class="form-control" @bind="newEvent" />
+    <div class="input-group-append">
+        <button class="btn btn-primary" @onclick="AddEvent">Add event</button>
+    </div>
+</div>
+
+
+
+@code {
+
+    private CalendarContainer Container = new CalendarContainer();
+    private string newEvent;
+
+
+    private async Task AddEvent()
+    {
+        if (!string.IsNullOrWhiteSpace(newEvent))
+        {
+            DateState.Container.Settings.Event.Add(newEvent);
+            newEvent = string.Empty;
+            await localStore.SetItemAsync("Calendar", Container);
+        }
+    }
+
+    private async Task RemoveEvent(string eventName)
+    {
+        DateState.Container.Settings.Event.Remove(eventName);
+        await localStore.SetItemAsync("Calendar", Container);
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Container = await localStore.GetItemAsync<CalendarContainer>("Calendar");
+        DateState.UpdateCalendar(Container);
+
+        if (DateState.Container == null)
+        {
+            DateState.UpdateCalendar(new CalendarContainer());
+        }
+    }
+
+
+    protected override void OnInitialized()
+    {
+        DateState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        DateState.OnChange -= StateHasChanged;
+    }
+
+}

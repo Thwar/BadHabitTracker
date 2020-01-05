@@ -1,0 +1,491 @@
+﻿@inject Blazored.LocalStorage.ILocalStorageService localStore
+@using ThomasCalendar.Business
+@using ThomasCalendar.Models;
+@inject IJSRuntime JSRuntime;
+@implements IDisposable
+@inject DateState DateState
+
+
+@page "/"
+
+<link href="/css/calendar.css" rel="stylesheet" />
+
+<style>
+    .arrow {
+        color: white;
+        font-size: 150%;
+        padding: 10px;
+        cursor: pointer;
+    }
+
+    .calendar-day__content .note {
+        position: absolute;
+        margin: 40px 10px 10px 15px;
+        cursor: pointer;
+        transition: all 0.5s ease;
+        font-size: 55%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal;
+    }
+
+    .calendar-day__content .addNote {
+        position: absolute;
+        cursor: pointer;
+        right: 2px;
+        bottom: 2px;
+        opacity: 0;
+        transition: all 0.3s ease;
+    }
+
+    .calendar-day__content .noteBox {
+        position: absolute;
+        cursor: pointer;
+        left: 2px;
+        bottom: 2px;
+        font-size: 50%;
+    }
+
+    .calendar-day__content:hover > .addNote {
+        opacity: 1;
+    }
+
+    .calendar-day__content:hover {
+        cursor: pointer;
+        background-color: rgba(78, 135, 146, 0.8);
+    }
+
+    .calendar-day--good-past .calendar-day__content:hover {
+        background-color: rgba(103, 199, 124, 0.8);
+    }
+
+    .calendar-day-bad .calendar-day__content {
+        background-color: #AA3939;
+    }
+
+    .badge.event {
+    }
+
+    .removeEvent {
+        font-size: 75%;
+        color: #AA3939;
+    }
+
+        .removeEvent:hover {
+            font-size: 80%;
+        }
+</style>
+
+
+<div class="row">
+    <div class="col-sm-4">
+        <h1 style="color:white">@currentDate.ToString("MMMM") @currentDate.Year</h1>
+    </div>
+    <div class="col-sm-4" style="line-height:3.5">
+        <span @onclick="PrevMonth" class="oi oi-arrow-circle-left arrow"></span>
+        <span @onclick="NextMonth" class="oi oi-arrow-circle-right arrow"></span>
+    </div>
+</div>
+
+<ol class="calendar">
+
+    @foreach ((DateTime date, Int32 index) in AllDatesInMonth(currentDate.Year, currentDate.Month)
+.Select((value, i) => (value, i)))
+    {
+        // Is current day?
+        bool isCurrentDay = date.Date == todaysDate.Date;
+
+        // Get previous month days
+        @if (index == 0 && date.DayOfWeek != DayOfWeek.Sunday)
+        {
+            for (int i = 0; i < (int)date.DayOfWeek; i++)
+            {
+                <li class="calendar-day calendar-day--past calendar-day--not-month"
+                    style="@(isCurrentDay ? " border: yellow 3px solid;" : "" )"
+                    data-weekday="@date.AddDays(-(int)date.DayOfWeek - i).ToString("ddd").Substring(0, 3)" data-week="">
+                    <span class="calendar-day__number">@date.AddDays(-(int)date.DayOfWeek - i).Day</span>
+                    <div class="calendar-day__content"></div>
+                </li>
+            }
+        }
+
+        // Get Saved dates
+        Year savedYear = Container.Year.SingleOrDefault(x => x.Name == date.Year.ToString());
+        Month savedMonth = null;
+        if (savedYear != null)
+        {
+            savedMonth = savedYear.Month.SingleOrDefault(x => x.Name == date.ToString("MMMM"));
+        }
+
+        // Get bad habit from Month
+        Day dayActivity = null;
+        if (savedMonth != null)
+        {
+            dayActivity = savedMonth.Day.SingleOrDefault(x => x.Date == date);
+        }
+
+        bool didSomethingBad = dayActivity != null && dayActivity.DidSomethingBad;
+
+
+        // Calendar Day Block
+        <li class="calendar-day @(didSomethingBad ? "calendar-day-bad" : todaysDate.Date > date.Date ? "calendar-day--good-past" : ""  )"
+            data-weekday="@date.ToString("ddd").Substring(0, 3)" data-week=""
+            @onclick="@(() => ToggleStatus(date))"
+            style="@(isCurrentDay ? " border: yellow 3px solid;" : "" )">
+            <span class="calendar-day__number">@date.Day</span>
+            <div class="calendar-day__content">
+
+                <div class="note">
+
+                    @if (dayActivity?.Event != null)
+                    {
+                        @foreach (var eventName in dayActivity?.Event.Where(x => !string.IsNullOrWhiteSpace(x)))
+                        {
+                            <div class="badge badge-primary event">@eventName</div>
+                        }
+                    }
+                </div>
+
+                @*<div class="note">@(dayActivity.Note.Length > 150 ? dayActivity.Note.Substring(0, 150) + "..." : dayActivity.Note)</div>*@
+
+                <div class="addNote">
+                    <input type="button" value="Add" @onclick="@(() => AddNote(date, dayActivity?.Note, dayActivity?.Event))" @onclick:stopPropagation="true" class="btn btn-primary" />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(dayActivity?.Note))
+                {
+                    <div class="noteBox badge badge-info">
+                        Note
+                    </div>
+                }
+            </div>
+        </li>
+    }
+
+    @*
+        <li class="calendar-day calendar-day--begin-week calendar-day--pastW calendar-day--not-month" data-weekday="Mon" data-week="39">
+            <span class="calendar-day__number">26</span>
+            <div class="calendar-day__content"></div>
+        </li>
+        <li class="calendar-day calendar-day--past calendar-day--not-month" data-weekday="Tue" data-week="39">
+            <span class="calendar-day__number">27</span>
+            <div class="calendar-day__content"></div>
+        </li>
+        <li class="calendar-day calendar-day--past calendar-day--entry calendar-day--not-month" data-weekday="Thu" data-week="39">
+            <span class="calendar-day__number">29</span>
+            <div class="calendar-day__content"></div>
+        </li>
+        <li class="calendar-day calendar-day--past calendar-day--not-month" data-weekday="Fri" data-week="39">
+            <span class="calendar-day__number">30</span>
+            <div class="calendar-day__content"></div>
+        </li>
+
+        <li class="calendar-day calendar-day--begin-week calendar-day--past" data-weekday="Mon" data-week="40">
+            <span class="calendar-day__number">03</span>
+            <div class="calendar-day__content"></div>
+        </li>
+
+        <li class="calendar-day calendar-day--today" data-weekday="Fri" data-week="40">
+            <span class="calendar-day__number">07</span>
+            <div class="calendar-day__content"></div>
+        </li>
+        <li class="calendar-day" data-weekday="Sat" data-week="40">
+            <span class="calendar-day__number">08</span>
+            <div class="calendar-day__content"></div>
+        </li>
+        <li class="calendar-day calendar-day--entry" data-weekday="Sun" data-week="40">
+            <span class="calendar-day__number">09</span>
+            <div class="calendar-day__content"></div>
+        </li>
+        <li class="calendar-day calendar-day--begin-week calendar-day--entry" data-weekday="Mon" data-week="41">
+            <span class="calendar-day__number">10</span>
+            <div class="calendar-day__content"></div>
+        </li>
+        <li class="calendar-day calendar-day--entry" data-weekday="Tue" data-week="41">
+            <span class="calendar-day__number">11</span>
+            <div class="calendar-day__content"></div>
+        </li>
+
+        </li>
+
+        <li class="calendar-day calendar-day--begin-week" data-weekday="Mon" data-week="43">
+            <span class="calendar-day__number">24</span>
+            <div class="calendar-day__content"></div>
+        </li>
+        <li class="calendar-day" data-weekday="Sat" data-week="43">
+            <span class="calendar-day__number">29</span>
+            <div class="calendar-day__content"></div>
+        </li>
+        @*
+
+        <li class="calendar-day calendar-day--not-month" data-weekday="Sun" data-week="44">
+            <span class="calendar-day__number">06</span>
+            <div class="calendar-day__content"></div>
+        </li>*@
+</ol>
+
+
+<div class="row" style=" color: white; margin-bottom: 2em">
+    <div class="col-sm-6">
+        Today's date and time: @todaysDate
+    </div>
+    <div class="col-sm-6">
+
+        @if (Habits.Count != 0)
+        {
+            var totalMonthRelapses = Habits.Count(x => x.Date.Month == currentDate.Month && x.Date.Year == currentDate.Year);
+
+            <div>Total Relapses this month: @totalMonthRelapses</div>
+        }
+    </div>
+
+</div>
+
+<!-- Add Event Modal -->
+<div class="modal fade" id="addNoteModal" tabindex="-1" role="dialog" aria-labelledby="addNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addNoteModalLabel">Add event</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="form-row form-group">
+                    <div class="col">
+                        <label><strong>Event</strong></label>
+                        <select id="eventDdl" class="form-control" @bind="@SelectedEvent">
+                            @if (DateState?.Container?.Settings != null)
+                            {
+                                <option value="Select Event"></option>
+                                @foreach (var eventName in DateState.Container.Settings.Event)
+                                {
+                                    string name = eventName;
+
+                                    @if (DayEvents != null && DayEvents.Count != 0 && DayEvents.Contains(name))
+                                    {
+
+                                    }
+                                    else
+                                    {
+                                        <option value="@name">@name</option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    @* List of Events This Day  *@
+                    <div class="col">
+                        <label><strong>Events this day</strong></label>
+                        <ul style="list-style: none; padding-left: 25px;">
+                            @if (DayEvents != null && DayEvents.Count != 0)
+                            {
+                                @foreach (var eventName in DayEvents.Where(x => !string.IsNullOrWhiteSpace(x)))
+                                {
+                                    <li><span class="badge">@eventName</span> <span @onclick="(() =>DeleteEvent(eventName))" class="oi oi-x removeEvent" aria-hidden="true"></span></li>
+                                }
+                            }
+
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="form-row form-group">
+                    <label><strong>Add a Note</strong></label>
+
+                    <textarea id="noteText" class="form-control" rows="3" cols="20" @bind="Note"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" @onclick="ModalAddNote" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    public DateTime currentDate = DateTime.Now;
+    public DateTime todaysDate = DateTime.Now;
+    private CalendarContainer Container = new CalendarContainer();
+    private List<Day> Habits = new List<Day>();
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender) { }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        string localDate = await JSRuntime.InvokeAsync<string>("GetLocalDate");
+        currentDate = DateTime.Parse(localDate);
+        todaysDate = DateTime.Parse(localDate);
+        Container = await localStore.GetItemAsync<CalendarContainer>("Calendar");
+
+        var helperFunctions = new HelperFunctions();
+
+        if (Container != null)
+        {
+            helperFunctions.CalculateBadDays(Habits, Container);
+        }
+        else
+        {
+            Container = new CalendarContainer();
+        }
+    }
+
+    public static IEnumerable<DateTime> AllDatesInMonth(int year, int month)
+    {
+        int days = DateTime.DaysInMonth(year, month);
+        for (int day = 1; day <= days; day++)
+        {
+            yield return new DateTime(year, month, day);
+        }
+    }
+
+    private void NextMonth()
+    {
+        currentDate = currentDate.AddMonths(1);
+    }
+
+    private void PrevMonth()
+    {
+        currentDate = currentDate.AddMonths(-1);
+    }
+
+    private async void ToggleStatus(DateTime date, string note = null, string eventName = null)
+    {
+        // Year exists?
+        var year = Container.Year.FirstOrDefault(x => x.Name.Contains(date.Year.ToString()));
+        var month = new Month();
+        bool addYear = false;
+        bool addMonth = false;
+
+        if (year != null)
+        {
+            // Month exists?
+            month = year.Month.FirstOrDefault(x => x.Name.Contains(date.ToString("MMMM")));
+
+            if (month == null)
+            {
+                month = new Month { Name = date.ToString("MMMM") };
+                addMonth = true;
+            }
+        }
+        else
+        {
+            year = new Year { Name = date.Year.ToString() };
+            month.Name = date.ToString("MMMM");
+            addYear = true;
+            addMonth = true;
+        }
+
+        // Day exists?
+        var badHabit = month.Day.Any(x => x.Date == date.Date);
+        if (!badHabit)
+        {
+            var newBadHabit = new Day
+            {
+                Date = date.Date,
+                Note = note ?? "",
+                Event = !string.IsNullOrWhiteSpace(eventName) ? new List<string>() { eventName } : null,
+                DidSomethingBad = note == null
+            };
+
+            // Save new date
+            month.Day.Add(newBadHabit);
+
+            // Save new date
+            if (addMonth)
+            {
+                year.Month.Add(month);
+            }
+
+            if (addYear)
+            {
+                Container.Year.Add(year);
+            }
+        }
+        else
+        {
+            if (!string.IsNullOrWhiteSpace(eventName))
+            {
+                // Remove Event from day
+                if (month.Day.Single(x => x.Date == date.Date).Event.Contains(eventName))
+                {
+                    month.Day.Single(x => x.Date == date.Date).Event.Remove(eventName);
+                }
+                else
+                {
+                    // Add Event to day
+                    month.Day.Single(x => x.Date == date.Date).Event.Add(eventName);
+                }
+            }
+
+            if (note != null)
+            {
+                month.Day.Single(x => x.Date == date.Date).Note = note;
+            }
+            else
+            {
+                bool didSomethingBad = month.Day.Single(x => x.Date == date.Date).DidSomethingBad;
+                month.Day.Single(x => x.Date == date.Date).DidSomethingBad = !didSomethingBad;
+            }
+        }
+
+        await localStore.SetItemAsync("Calendar", Container);
+
+        // Refresh data
+        var helperFunctions = new HelperFunctions();
+        helperFunctions.CalculateBadDays(Habits, Container);
+        base.StateHasChanged();
+
+
+        // Refresh nav data?
+        DateState.UpdateCalendar(Container);
+    }
+
+
+    DateTime NoteDate;
+    protected string Note { get; set; }
+    protected List<string> DayEvents { get; set; }
+    protected string SelectedEvent { get; set; }
+
+
+    private void AddNote(DateTime date, string note, List<string> events)
+    {
+        NoteDate = date;
+        Note = note;
+        DayEvents = events;
+        SelectedEvent = String.Empty;
+        JSRuntime.InvokeAsync<bool>("OpenModal");
+    }
+
+
+    private void ModalAddNote()
+    {
+        ToggleStatus(NoteDate, Note, SelectedEvent);
+        JSRuntime.InvokeAsync<bool>("CloseModal");
+    }
+
+    private void DeleteEvent(string eventName)
+    {
+        ToggleStatus(NoteDate, Note, eventName);
+    }
+
+    protected override void OnInitialized()
+    {
+        DateState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        DateState.OnChange -= StateHasChanged;
+    }
+}
