@@ -17,12 +17,18 @@ namespace ThomasCalendar.Models
 
     public class Settings
     {
-        public List<string> Event { get; set; }
+        public List<Event> Event { get; set; }
 
         public Settings()
         {
-            this.Event = new List<string>();
+            this.Event = new List<Event>();
         }
+    }
+
+    public class Event
+    {
+        public string Name { get; set; }
+        public string Color { get; set; }
     }
 
     public class Day

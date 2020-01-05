@@ -9,20 +9,23 @@
 <h1>Events</h1>
 
 <div class="form-group">
-    <ul class="list-group">
+    <h3>List of Events</h3>
+    <ul class="list-group eventList">
         @if (DateState?.Container?.Settings != null)
         {
             @foreach (var eventName in DateState.Container.Settings.Event)
             {
-                string name = eventName;
+                string name = eventName.Name;
 
                 <li class="list-group-item">
-                    @*<input type="checkbox" @bind="todo.IsDone" />*@
 
-                    <div class="input-group row col-sm-6">
+                    <div class="input-group col-sm-6 eventItem">
+                        <div class="input-group-append">
+                            <span style=@(eventName.Color != null ? "background-color:" + eventName.Color : "") class="input-group-text">&nbsp;&nbsp;</span>
+                        </div>
                         <input disabled="disabled" class="form-control" @bind="name" />
                         <div class="input-group-append">
-                            <button class="btn btn-danger" @onclick="(()=>RemoveEvent(name))">Remove</button>
+                            <button class="btn btn-danger" @onclick="(()=>RemoveEvent(name))"><span class="oi oi-x"></span></button>
                         </div>
                     </div>
 
@@ -38,11 +41,11 @@
 
 <br />
 
-
+<h3>Add new Event</h3>
 <div class="input-group row form-group col-sm-6">
     <input placeholder="Event/Activity Name" class="form-control" @bind="newEvent" />
     <div class="input-group-append">
-        <button class="btn btn-primary" @onclick="AddEvent">Add event</button>
+        <button class="btn btn-primary" @onclick="AddEvent">Add</button>
     </div>
 </div>
 
@@ -58,7 +61,11 @@
     {
         if (!string.IsNullOrWhiteSpace(newEvent))
         {
-            DateState.Container.Settings.Event.Add(newEvent);
+            // get random hex color
+            var random = new Random();
+            var color = $"#{random.Next(0x1000000):X6}";
+
+            DateState.Container.Settings.Event.Add(new Event() { Name = newEvent, Color = color });
             newEvent = string.Empty;
             await localStore.SetItemAsync("Calendar", Container);
         }
@@ -66,7 +73,7 @@
 
     private async Task RemoveEvent(string eventName)
     {
-        DateState.Container.Settings.Event.Remove(eventName);
+        DateState.Container.Settings.Event.Remove(DateState.Container.Settings.Event.First(x => x.Name == eventName));
         await localStore.SetItemAsync("Calendar", Container);
     }
 

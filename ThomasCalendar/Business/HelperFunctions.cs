@@ -23,5 +23,24 @@ namespace ThomasCalendar.Business
                 }
             }
         }
+
+        public void GetDaysWithEventByName(List<Day> days, CalendarContainer container, string eventName)
+        {
+            days.Clear();
+
+            foreach (var years in container.Year)
+            {
+                foreach (var months in years.Month)
+                {
+                    foreach (var day in months.Day)
+                    {
+                        if (day.Event != null && day.Event.Contains(eventName))
+                        {
+                            days.Add(day);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

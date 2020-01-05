@@ -141,7 +141,9 @@
                     {
                         @foreach (var eventName in dayActivity?.Event.Where(x => !string.IsNullOrWhiteSpace(x)))
                         {
-                            <div class="badge badge-primary event">@eventName</div>
+                            var color = DateState.Container.Settings.Event.FirstOrDefault(x => x.Name == eventName);
+
+                            <div style=@(color != null ? "background-color:" + color.Color : "") class="badge badge-primary event">@eventName</div>
                         }
                     }
                 </div>
@@ -246,7 +248,7 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addNoteModalLabel">Add event</h5>
+                <h5 class="modal-title" id="addNoteModalLabel">Edit</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -255,14 +257,14 @@
 
                 <div class="form-row form-group">
                     <div class="col">
-                        <label><strong>Event</strong></label>
+                        <label><strong>Add an Event</strong></label>
                         <select id="eventDdl" class="form-control" @bind="@SelectedEvent">
                             @if (DateState?.Container?.Settings != null)
                             {
                                 <option value="Select Event"></option>
                                 @foreach (var eventName in DateState.Container.Settings.Event)
                                 {
-                                    string name = eventName;
+                                    string name = eventName.Name;
 
                                     @if (DayEvents != null && DayEvents.Count != 0 && DayEvents.Contains(name))
                                     {
@@ -285,8 +287,12 @@
                             {
                                 @foreach (var eventName in DayEvents.Where(x => !string.IsNullOrWhiteSpace(x)))
                                 {
-                                    <li><span class="badge">@eventName</span> <span @onclick="(() =>DeleteEvent(eventName))" class="oi oi-x removeEvent" aria-hidden="true"></span></li>
+                                    <li><span class="badge">@eventName</span> <span @onclick="(() => DeleteEvent(eventName))" class="oi oi-x removeEvent" aria-hidden="true"></span></li>
                                 }
+                            }
+                            else
+                            {
+                                <li>n/a</li>
                             }
 
                         </ul>
@@ -294,9 +300,10 @@
                 </div>
 
                 <div class="form-row form-group">
-                    <label><strong>Add a Note</strong></label>
-
-                    <textarea id="noteText" class="form-control" rows="3" cols="20" @bind="Note"></textarea>
+                    <div class="col">
+                        <label><strong>Add a Note</strong></label>
+                        <textarea id="noteText" class="form-control" rows="3" cols="20" @bind="Note"></textarea>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">
@@ -361,6 +368,11 @@
 
     private async void ToggleStatus(DateTime date, string note = null, string eventName = null)
     {
+        if (note == null && eventName == null && date > todaysDate)
+        {
+            return;
+        }
+
         // Year exists?
         var year = Container.Year.FirstOrDefault(x => x.Name.Contains(date.Year.ToString()));
         var month = new Month();
@@ -395,7 +407,7 @@
                 Date = date.Date,
                 Note = note ?? "",
                 Event = !string.IsNullOrWhiteSpace(eventName) ? new List<string>() { eventName } : null,
-                DidSomethingBad = note == null
+                DidSomethingBad = note == null && string.IsNullOrWhiteSpace(eventName)
             };
 
             // Save new date
@@ -414,10 +426,12 @@
         }
         else
         {
+            var dayEvent = month.Day.Single(x => x.Date == date.Date).Event;
+
             if (!string.IsNullOrWhiteSpace(eventName))
             {
                 // Remove Event from day
-                if (month.Day.Single(x => x.Date == date.Date).Event.Contains(eventName))
+                if (dayEvent != null && dayEvent.Contains(eventName))
                 {
                     month.Day.Single(x => x.Date == date.Date).Event.Remove(eventName);
                 }
@@ -432,10 +446,17 @@
             {
                 month.Day.Single(x => x.Date == date.Date).Note = note;
             }
-            else
+            else if (string.IsNullOrWhiteSpace(eventName))
             {
                 bool didSomethingBad = month.Day.Single(x => x.Date == date.Date).DidSomethingBad;
                 month.Day.Single(x => x.Date == date.Date).DidSomethingBad = !didSomethingBad;
+
+                // Remove day record if no info
+                var currentNote = month.Day.Single(x => x.Date == date.Date).Note;
+                if (didSomethingBad && (dayEvent == null || dayEvent.Count == 0) && string.IsNullOrWhiteSpace(currentNote))
+                {
+                    month.Day.Remove(month.Day.Single(x => x.Date == date.Date));
+                }
             }
         }
 

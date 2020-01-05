@@ -21,7 +21,7 @@ function CloseModal() {
 function GetLocalDate() {
 
     var date = new Date().toLocaleString();
-    console.log(date);
+   // console.log(date);
     return date; 
 }
 
