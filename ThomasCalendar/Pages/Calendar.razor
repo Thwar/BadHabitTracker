@@ -102,8 +102,8 @@
             {
                 <li class="calendar-day calendar-day--past calendar-day--not-month"
                     style="@(isCurrentDay ? " border: yellow 3px solid;" : "" )"
-                    data-weekday="@date.AddDays(-(int)date.DayOfWeek - i).ToString("ddd").Substring(0, 3)" data-week="">
-                    <span class="calendar-day__number">@date.AddDays(-(int)date.DayOfWeek - i).Day</span>
+                    data-weekday="@date.AddDays(-(int)date.DayOfWeek + i).ToString("ddd").Substring(0, 3)" data-week="">
+                    <span class="calendar-day__number">@date.AddDays(-(int)date.DayOfWeek + i).Day</span>
                     <div class="calendar-day__content"></div>
                 </li>
             }
@@ -229,7 +229,7 @@
 
 <div class="row" style=" color: white; margin-bottom: 2em">
     <div class="col-sm-6">
-        Today's date and time: @todaysDate
+        @*Today's date and time: @todaysDate*@
     </div>
     <div class="col-sm-6">
 

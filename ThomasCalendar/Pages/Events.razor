@@ -3,8 +3,13 @@
 @using ThomasCalendar.Models
 @inject Blazored.LocalStorage.ILocalStorageService localStore
 @inject DateState DateState
-@*<h1>Todo (@todos.Count(todo => !todo.IsDone))</h1>*@
+@inject IJSRuntime JSRuntime;
 
+<style>
+    .eventEdit:hover {
+        cursor: pointer;
+    }
+</style>
 
 <h1>Events</h1>
 
@@ -16,22 +21,20 @@
             @foreach (var eventName in DateState.Container.Settings.Event)
             {
                 string name = eventName.Name;
+                string color = eventName.Color;
 
                 <li class="list-group-item">
 
                     <div class="input-group col-sm-6 eventItem">
                         <div class="input-group-append">
-                            <span style=@(eventName.Color != null ? "background-color:" + eventName.Color : "") class="input-group-text">&nbsp;&nbsp;</span>
+                            <span style=@(color != null ? "background-color:" + color : "") class="input-group-text">&nbsp;&nbsp;</span>
                         </div>
-                        <input disabled="disabled" class="form-control" @bind="name" />
+                        <input @onclick="@(() => EditEvent(name, color))" class="form-control eventEdit" @bind="name" />
                         <div class="input-group-append">
                             <button class="btn btn-danger" @onclick="(()=>RemoveEvent(name))"><span class="oi oi-x"></span></button>
                         </div>
                     </div>
-
-                    <div class="col-sm-6">
-                    </div>
-
+                    <div class="col-sm-6">  </div>
                 </li>
             }
         }
@@ -49,6 +52,42 @@
     </div>
 </div>
 
+
+<!-- Edit Event Modal -->
+<div class="modal fade" id="addNoteModal" tabindex="-1" role="dialog" aria-labelledby="addNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addNoteModalLabel">Edit Event</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+
+                <div class="form-row form-group">
+                    <div class="col">
+                        <label><strong>Event Name</strong></label>
+                        <input class="form-control" @bind="newEventName" />
+                        <input id="selectedColor" type="hidden" />
+                    </div>
+
+                </div>
+
+                <div class="form-row form-group">
+                    <label class="col-sm-12"><strong>Event Color Code</strong></label>
+                    <br />
+                    <div class="col-sm-12" id="picker"></div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" @onclick="SaveEventData" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 
 @code {
@@ -88,6 +127,42 @@
         }
     }
 
+    string newEventName;
+    string oldEventName;
+    private void EditEvent(string name, string color)
+    {
+        newEventName = name;
+        oldEventName = name;
+        JSRuntime.InvokeAsync<bool>("OpenEditEventModal", color);
+    }
+
+    private async void SaveEventData()
+    {
+        // Update Color
+        var newColor = await JSRuntime.InvokeAsync<string>("GetColorPickerValue");
+        DateState.Container.Settings.Event.Single(x => x.Name == oldEventName).Color = newColor;
+
+        // Update Event Name
+        if (newEventName != oldEventName)
+        {
+            // Update Event Name for existing days
+            var helper = new HelperFunctions();
+            helper.UpdateEventName(DateState.Container, oldEventName, newEventName);
+
+            // Update Event Name in Settings
+            DateState.Container.Settings.Event.Single(x => x.Name == oldEventName).Name = newEventName;
+
+        }
+
+        // Save Calendar
+        await localStore.SetItemAsync("Calendar", DateState.Container);
+
+        // Refresh nav data?
+        DateState.UpdateCalendar(DateState.Container);
+
+        // Close Modal
+        await JSRuntime.InvokeAsync<bool>("CloseModal");
+    }
 
     protected override void OnInitialized()
     {

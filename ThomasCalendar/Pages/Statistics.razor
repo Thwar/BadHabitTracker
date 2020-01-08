@@ -65,6 +65,39 @@
         }
     </table>
 
+    <table class="table table-dark" style="width:100%;">
+
+
+        @if (DateState?.Container?.Settings != null)
+        {
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>Last Occurrence</th>
+
+                </tr>
+            </thead>
+            @foreach (var eventName in DateState.Container.Settings.Event)
+            {
+                string name = eventName.Name;
+
+
+                var helperFunctions = new HelperFunctions();
+                helperFunctions.GetDaysWithEventByName(Days, DateState.Container, name);
+
+                var allTime = Days.OrderByDescending(x => x.Date).First().Date;
+
+
+                <tr>
+                    <td>@name</td>
+                    <td>@(((todaysDate.Date - allTime.Date).TotalDays - 1)) days since last occurence</td>
+
+                </tr>
+
+            }
+        }
+    </table>
+
 
 </div>
 
