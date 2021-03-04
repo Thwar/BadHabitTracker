@@ -26,6 +26,11 @@ namespace ThomasCalendar.Business
             }
         }
 
+        public static string GetTotalMonthSpending(CalendarContainer calendar, DateTime currentDate)
+        {
+            return "";
+        }
+
         public static IEnumerable<DateTime> GetAllDatesInMonth(int year, int month)
         {
             int days = DateTime.DaysInMonth(year, month);

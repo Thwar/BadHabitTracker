@@ -5,7 +5,6 @@
 @implements IDisposable
 @inject DateState DateState
 
-
 @page "/"
 
 <link href="/css/calendar.css" rel="stylesheet" />
@@ -76,9 +75,6 @@
             background-color: rgba(170, 57, 57, 0.8);
         }
 
-    .badge.event {
-    }
-
     .removeEvent {
         font-size: 75%;
         color: #AA3939;
@@ -87,6 +83,10 @@
         .removeEvent:hover {
             font-size: 80%;
         }
+
+    .modal-header .close {
+        margin: -1rem -1rem -1rem 0;
+    }
 </style>
 
 
@@ -94,9 +94,14 @@
     <div class="col-sm-4">
         <h1 style="color:white">@currentDate.ToString("MMMM") @currentDate.Year</h1>
     </div>
+
     <div class="col-sm-4" style="line-height:3.5">
         <span @onclick="PrevMonth" class="oi oi-arrow-circle-left arrow"></span>
         <span @onclick="NextMonth" class="oi oi-arrow-circle-right arrow"></span>
+    </div>
+
+    <div class="col-sm-4">
+        @HelperFunctions.GetTotalMonthSpending(Container, currentDate); 
     </div>
 </div>
 
@@ -211,9 +216,9 @@
 <!-- Day Journal Modal Entry -->
 <div class="modal fade" id="addNoteModal" tabindex="-1" role="dialog" aria-labelledby="addNoteModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl" role="document">
-        <div class="modal-content">
+        <div class="modal-content" style="background-color: linen;">
             <div class="modal-header">
-                <h5 class="modal-title" id="addNoteModalLabel">Journal Entry @JournalDate.ToShortDateString()</h5>
+                <h5 class="modal-title" id="addNoteModalLabel" style="margin: 0 auto">Journal Entry @JournalDate.ToShortDateString()</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -222,63 +227,70 @@
 
                 <div class="col-sm-6">
                     <div class="form-row form-group">
-                        <div class="col">
 
-                            @* Add Event *@
-                            <label><strong>Add an Event</strong></label>
+                        @* Add Event *@
+                        <label style="width:100%; border-bottom: 2px solid grey;">Day Events</label>
 
-                            <div class="input-group form-group">
-                                <input placeholder="Event/Activity Name" class="form-control" @bind="newEvent" />
-                                <div class="input-group-append">
-                                    <button class="btn btn-primary" @onclick="AddEvent">Add</button>
-                                </div>
+                        <div class="input-group col-sm-6">
+                            <input placeholder="Event/Activity Name" class="form-control" @bind="newEvent" />
+                            <div class="input-group-append">
+                                <button class="btn btn-info" @onclick="AddEvent">Create</button>
                             </div>
-                            <div class="input-group">
-                                <select id="eventDdl" class="form-control selectpicker" @bind="@SelectedEvent">
-                                    <option value="default">--select--</option>
+                        </div>
+                        <div class="input-group col-sm-6">
+                            <select id="eventDdl" class="form-control selectpicker" @bind="@SelectedEvent">
+                                <option value="default">--Select Event--</option>
 
-                                    @if (DateState?.Container?.Settings != null)
+                                @if (DateState?.Container?.Settings != null)
+                                {
+                                    @foreach (var eventName in DateState.Container.Settings.Event)
                                     {
-                                        @foreach (var eventName in DateState.Container.Settings.Event)
+                                        string name = eventName.Name;
+
+                                        @if (DayEvents != null && DayEvents.Count != 0 && DayEvents.Contains(name))
                                         {
-                                            string name = eventName.Name;
 
-                                            @if (DayEvents != null && DayEvents.Count != 0 && DayEvents.Contains(name))
-                                            {
-
-                                            }
-                                            else
-                                            {
-                                                <option value="@name">@name</option>
-                                            }
+                                        }
+                                        else
+                                        {
+                                            <option value="@name">@name</option>
                                         }
                                     }
-                                </select>
-                                <div class="input-group-append">
-                                    <button type="button" @onclick="AddLineEvent" class="btn btn-primary">Add</button>
-                                </div>
+                                }
+                            </select>
+                            <div class="input-group-append">
+                                <button type="button" @onclick="AddLineEvent" class="btn btn-primary">Add</button>
                             </div>
-
                         </div>
 
+                    </div>
+
+                    <div class="form-row form-group">
                         @* List of Events This Day  *@
-                        <div class="col">
-                            <label><strong>Events this day</strong></label>
-                            <ul style="list-style: none; padding-left: 25px;">
-                                @if (DayEvents != null && DayEvents.Count != 0)
-                                {
-                                    @foreach (var eventName in DayEvents.Where(x => !string.IsNullOrWhiteSpace(x)))
-                                    {
-                                        <li><span class="badge">@eventName</span> <span @onclick="(() => DeleteEvent(eventName))" class="oi oi-x removeEvent" aria-hidden="true"></span></li>
-                                    }
-                                }
-                                else
-                                {
-                                    <li>n/a</li>
-                                }
 
-                            </ul>
-                        </div>
+                        <ul style="list-style: none; padding-left: 25px;">
+                            @if (DayEvents != null && DayEvents.Count != 0)
+                            {
+                                @foreach (var eventName in DayEvents.Where(x => !string.IsNullOrWhiteSpace(x)))
+                                {
+                                    var color = DateState.Container.Settings.Event.FirstOrDefault(x => x.Name == eventName);
+
+                                    <li style="display: inline-block">
+                                        <span style=@(color != null ? "background-color:" + color.Color : "") class="badge badge-primary">
+                                            @eventName &nbsp;
+                                            <span @onclick="(() => DeleteLineEvent(eventName))" class="oi oi-x removeEvent" aria-hidden="true"></span>
+                                        </span>
+
+                                    </li>
+                                }
+                            }
+                            else
+                            {
+                                //nada
+                            }
+
+                        </ul>
+
                     </div>
                     <hr />
 
@@ -286,7 +298,7 @@
                     <div class="form-row form-group">
 
                         <div class="col">
-                            <label style="width:100%"><strong>Expenses</strong></label>
+                            <label style="width:100%; border-bottom: 2px solid grey;">Day Expenses</label>
 
                             @if (DayLedger != null && DayLedger.Count != 0)
                             {
@@ -304,17 +316,15 @@
                                 }
                             }
 
-                            <br />
-                            <button type="button" @onclick="AddLedgerLine" class="btn btn-primary"><span class="oi oi-plus"></span></button>
+                            <button type="button" @onclick="AddLedgerLine" class="btn btn-success btn-sm"><span class="oi oi-plus"></span></button>
 
                         </div>
                     </div>
-
                 </div>
 
                 <div class="form-row form-group col-sm-6">
                     <div class="col">
-                        <label><strong>Add a Note</strong></label>
+                        <label style="width: 100%; border-bottom: 2px solid grey;">Day Journal</label>
                         <textarea id="noteText" class="form-control" @bind="Note"></textarea>
 
                     </div>
@@ -340,6 +350,12 @@
     private List<Day> Habits = new List<Day>();
     private string newEvent;
 
+    DateTime JournalDate;
+    protected string Note { get; set; }
+    protected List<string> DayEvents { get; set; }
+    public List<LedgerLine> DayLedger { get; set; }
+    protected string SelectedEvent { get; set; }
+
     private void AddLedgerLine()
     {
         if (DayLedger == null)
@@ -348,6 +364,31 @@
         }
 
         DayLedger.Add(new LedgerLine { Id = Guid.NewGuid(), Amount = 0, Description = "" });
+    }
+
+    private void DeleteLedgerLine(Guid id)
+    {
+        DayLedger.Remove(DayLedger.First(x => x.Id == id));
+    }
+
+    private void DeleteLineEvent(string eventName)
+    {
+        DayEvents.Remove(eventName);
+    }
+
+    private void AddLineEvent()
+    {
+        if (SelectedEvent != "default")
+        {
+            if (DayEvents == null)
+            {
+                DayEvents = new List<string>();
+            }
+
+            // ToggleStatus(JournalDate, Note, SelectedEvent);
+            DayEvents.Add(SelectedEvent);
+            SelectedEvent = "default";
+        }
     }
 
     private async Task AddEvent()
@@ -362,11 +403,6 @@
             newEvent = string.Empty;
             await localStore.SetItemAsync("Calendar", Container);
         }
-    }
-
-    private void DeleteLedgerLine(Guid id)
-    {
-        DayLedger.Remove(DayLedger.First(x => x.Id == id));
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -404,9 +440,9 @@
         currentDate = currentDate.AddMonths(-1);
     }
 
-    private async void ToggleStatus(DateTime date, string note = null, string eventName = null, List<LedgerLine> ledger = null, bool markDay = false)
+    private async void ToggleStatus(DateTime date, string note = null, List<string> events = null, List<LedgerLine> ledger = null, bool markDay = false)
     {
-        if (note == null && eventName == null && date > todaysDate && ledger == null)
+        if (note == null && events == null && date > todaysDate && ledger == null)
         {
             return;
         }
@@ -444,7 +480,7 @@
             {
                 Date = date.Date,
                 Note = note ?? "",
-                Event = !string.IsNullOrWhiteSpace(eventName) ? new List<string>() { eventName } : new List<string>(),
+                Event = events,
                 DidSomethingBad = markDay,
                 Ledger = ledger
             };
@@ -468,19 +504,10 @@
             // Day entry exists
             var dayEvent = month.Day.Single(x => x.Date == date.Date).Event;
 
-            // Edit Event
-            if (!string.IsNullOrWhiteSpace(eventName))
+            // Update Events
+            if (events != null)
             {
-                // Remove Event from day
-                if (dayEvent != null && dayEvent.Contains(eventName))
-                {
-                    month.Day.Single(x => x.Date == date.Date).Event.Remove(eventName);
-                }
-                else
-                {
-                    // Add Event to day
-                    month.Day.Single(x => x.Date == date.Date).Event.Add(eventName);
-                }
+                month.Day.Single(x => x.Date == date.Date).Event = events;
             }
 
             // Edit Note
@@ -525,13 +552,6 @@
     }
 
 
-    DateTime JournalDate;
-    protected string Note { get; set; }
-    protected List<string> DayEvents { get; set; }
-    public List<LedgerLine> DayLedger { get; set; }
-    protected string SelectedEvent { get; set; }
-
-
     private void OpenDayJournal(DateTime date, string note, List<string> events, List<LedgerLine> ledger)
     {
         JournalDate = date;
@@ -545,22 +565,8 @@
 
     private void SaveJournalEntry()
     {
-        ToggleStatus(JournalDate, Note, SelectedEvent, DayLedger);
+        ToggleStatus(JournalDate, Note, DayEvents, DayLedger);
         JSRuntime.InvokeAsync<bool>("CloseModal");
-    }
-
-    private void DeleteEvent(string eventName)
-    {
-        ToggleStatus(JournalDate, Note, eventName);
-    }
-
-    private void AddLineEvent()
-    {
-        if (SelectedEvent != "default")
-        {
-            ToggleStatus(JournalDate, Note, SelectedEvent);
-            SelectedEvent = "default";
-        }
     }
 
     protected override void OnInitialized()
