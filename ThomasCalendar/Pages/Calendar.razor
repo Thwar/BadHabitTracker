@@ -36,12 +36,21 @@
         bottom: 2px;
         opacity: 0;
         transition: all 0.3s ease;
+        z-index: 50;
     }
 
     .calendar-day__content .noteBox {
         position: absolute;
         cursor: pointer;
         left: 2px;
+        bottom: 2px;
+        font-size: 50%;
+    }
+
+    .calendar-day__content .totalBox {
+        position: absolute;
+        cursor: pointer;
+        right: 2px;
         bottom: 2px;
         font-size: 50%;
     }
@@ -60,8 +69,12 @@
     }
 
     .calendar-day-bad .calendar-day__content {
-        background-color: #AA3939;
+        background-color: rgba(170, 57, 57, 1);
     }
+
+        .calendar-day-bad .calendar-day__content:hover {
+            background-color: rgba(170, 57, 57, 0.8);
+        }
 
     .badge.event {
     }
@@ -89,7 +102,7 @@
 
 <ol class="calendar">
 
-    @foreach ((DateTime date, Int32 index) in AllDatesInMonth(currentDate.Year, currentDate.Month)
+    @foreach ((DateTime date, Int32 index) in HelperFunctions.GetAllDatesInMonth(currentDate.Year, currentDate.Month)
 .Select((value, i) => (value, i)))
     {
         // Is current day?
@@ -100,10 +113,12 @@
         {
             for (int i = 0; i < (int)date.DayOfWeek; i++)
             {
+                DateTime pastDay = date.AddDays(-(int)date.DayOfWeek + i);
+
                 <li class="calendar-day calendar-day--past calendar-day--not-month"
-                    style="@(isCurrentDay ? " border: yellow 3px solid;" : "" )"
+                    style="@(pastDay.Date == todaysDate.Date ? " border: yellow 3px solid;" : "" )"
                     data-weekday="@date.AddDays(-(int)date.DayOfWeek + i).ToString("ddd").Substring(0, 3)" data-week="">
-                    <span class="calendar-day__number">@date.AddDays(-(int)date.DayOfWeek + i).Day</span>
+                    <span class="calendar-day__number">@pastDay.Day</span>
                     <div class="calendar-day__content"></div>
                 </li>
             }
@@ -130,7 +145,7 @@
         // Calendar Day Block
         <li class="calendar-day @(didSomethingBad ? "calendar-day-bad" : todaysDate.Date > date.Date ? "calendar-day--good-past" : ""  )"
             data-weekday="@date.ToString("ddd").Substring(0, 3)" data-week=""
-            @onclick="@(() => ToggleStatus(date))"
+            @onclick="@(() => ToggleStatus(date, markDay: true))"
             style="@(isCurrentDay ? " border: yellow 3px solid;" : "" )">
             <span class="calendar-day__number">@date.Day</span>
             <div class="calendar-day__content">
@@ -151,7 +166,10 @@
                 @*<div class="note">@(dayActivity.Note.Length > 150 ? dayActivity.Note.Substring(0, 150) + "..." : dayActivity.Note)</div>*@
 
                 <div class="addNote">
-                    <input type="button" value="Add" @onclick="@(() => AddNote(date, dayActivity?.Note, dayActivity?.Event))" @onclick:stopPropagation="true" class="btn btn-primary" />
+                    <button @onclick="@(() => OpenDayJournal(date, dayActivity?.Note, dayActivity?.Event, dayActivity?.Ledger))" @onclick:stopPropagation="true" class="btn btn-primary">
+                        <span class="oi oi-plus"></span>
+                    </button>
+
                 </div>
 
                 @if (!string.IsNullOrWhiteSpace(dayActivity?.Note))
@@ -160,70 +178,17 @@
                         Note
                     </div>
                 }
+
+                @if (dayActivity?.Ledger != null && dayActivity?.Ledger.Count > 0)
+                {
+                    <div class="totalBox badge badge-dark">
+                        @(dayActivity.Ledger?.Sum(x=>x.Amount) ?? 0)
+                    </div>
+                }
             </div>
         </li>
     }
 
-    @*
-        <li class="calendar-day calendar-day--begin-week calendar-day--pastW calendar-day--not-month" data-weekday="Mon" data-week="39">
-            <span class="calendar-day__number">26</span>
-            <div class="calendar-day__content"></div>
-        </li>
-        <li class="calendar-day calendar-day--past calendar-day--not-month" data-weekday="Tue" data-week="39">
-            <span class="calendar-day__number">27</span>
-            <div class="calendar-day__content"></div>
-        </li>
-        <li class="calendar-day calendar-day--past calendar-day--entry calendar-day--not-month" data-weekday="Thu" data-week="39">
-            <span class="calendar-day__number">29</span>
-            <div class="calendar-day__content"></div>
-        </li>
-        <li class="calendar-day calendar-day--past calendar-day--not-month" data-weekday="Fri" data-week="39">
-            <span class="calendar-day__number">30</span>
-            <div class="calendar-day__content"></div>
-        </li>
-
-        <li class="calendar-day calendar-day--begin-week calendar-day--past" data-weekday="Mon" data-week="40">
-            <span class="calendar-day__number">03</span>
-            <div class="calendar-day__content"></div>
-        </li>
-
-        <li class="calendar-day calendar-day--today" data-weekday="Fri" data-week="40">
-            <span class="calendar-day__number">07</span>
-            <div class="calendar-day__content"></div>
-        </li>
-        <li class="calendar-day" data-weekday="Sat" data-week="40">
-            <span class="calendar-day__number">08</span>
-            <div class="calendar-day__content"></div>
-        </li>
-        <li class="calendar-day calendar-day--entry" data-weekday="Sun" data-week="40">
-            <span class="calendar-day__number">09</span>
-            <div class="calendar-day__content"></div>
-        </li>
-        <li class="calendar-day calendar-day--begin-week calendar-day--entry" data-weekday="Mon" data-week="41">
-            <span class="calendar-day__number">10</span>
-            <div class="calendar-day__content"></div>
-        </li>
-        <li class="calendar-day calendar-day--entry" data-weekday="Tue" data-week="41">
-            <span class="calendar-day__number">11</span>
-            <div class="calendar-day__content"></div>
-        </li>
-
-        </li>
-
-        <li class="calendar-day calendar-day--begin-week" data-weekday="Mon" data-week="43">
-            <span class="calendar-day__number">24</span>
-            <div class="calendar-day__content"></div>
-        </li>
-        <li class="calendar-day" data-weekday="Sat" data-week="43">
-            <span class="calendar-day__number">29</span>
-            <div class="calendar-day__content"></div>
-        </li>
-        @*
-
-        <li class="calendar-day calendar-day--not-month" data-weekday="Sun" data-week="44">
-            <span class="calendar-day__number">06</span>
-            <div class="calendar-day__content"></div>
-        </li>*@
 </ol>
 
 
@@ -243,72 +208,125 @@
 
 </div>
 
-<!-- Add Event Modal -->
+<!-- Day Journal Modal Entry -->
 <div class="modal fade" id="addNoteModal" tabindex="-1" role="dialog" aria-labelledby="addNoteModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-xl" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addNoteModalLabel">Edit</h5>
+                <h5 class="modal-title" id="addNoteModalLabel">Journal Entry @JournalDate.ToShortDateString()</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body row">
 
-                <div class="form-row form-group">
-                    <div class="col">
-                        <label><strong>Add an Event</strong></label>
-                        <select id="eventDdl" class="form-control" @bind="@SelectedEvent">
-                            @if (DateState?.Container?.Settings != null)
-                            {
-                                <option value="Select Event"></option>
-                                @foreach (var eventName in DateState.Container.Settings.Event)
-                                {
-                                    string name = eventName.Name;
+                <div class="col-sm-6">
+                    <div class="form-row form-group">
+                        <div class="col">
 
-                                    @if (DayEvents != null && DayEvents.Count != 0 && DayEvents.Contains(name))
+                            @* Add Event *@
+                            <label><strong>Add an Event</strong></label>
+
+                            <div class="input-group form-group">
+                                <input placeholder="Event/Activity Name" class="form-control" @bind="newEvent" />
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" @onclick="AddEvent">Add</button>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <select id="eventDdl" class="form-control selectpicker" @bind="@SelectedEvent">
+                                    <option value="default">--select--</option>
+
+                                    @if (DateState?.Container?.Settings != null)
                                     {
+                                        @foreach (var eventName in DateState.Container.Settings.Event)
+                                        {
+                                            string name = eventName.Name;
 
+                                            @if (DayEvents != null && DayEvents.Count != 0 && DayEvents.Contains(name))
+                                            {
+
+                                            }
+                                            else
+                                            {
+                                                <option value="@name">@name</option>
+                                            }
+                                        }
                                     }
-                                    else
+                                </select>
+                                <div class="input-group-append">
+                                    <button type="button" @onclick="AddLineEvent" class="btn btn-primary">Add</button>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        @* List of Events This Day  *@
+                        <div class="col">
+                            <label><strong>Events this day</strong></label>
+                            <ul style="list-style: none; padding-left: 25px;">
+                                @if (DayEvents != null && DayEvents.Count != 0)
+                                {
+                                    @foreach (var eventName in DayEvents.Where(x => !string.IsNullOrWhiteSpace(x)))
                                     {
-                                        <option value="@name">@name</option>
+                                        <li><span class="badge">@eventName</span> <span @onclick="(() => DeleteEvent(eventName))" class="oi oi-x removeEvent" aria-hidden="true"></span></li>
                                     }
                                 }
-                            }
-                        </select>
-                    </div>
-
-                    @* List of Events This Day  *@
-                    <div class="col">
-                        <label><strong>Events this day</strong></label>
-                        <ul style="list-style: none; padding-left: 25px;">
-                            @if (DayEvents != null && DayEvents.Count != 0)
-                            {
-                                @foreach (var eventName in DayEvents.Where(x => !string.IsNullOrWhiteSpace(x)))
+                                else
                                 {
-                                    <li><span class="badge">@eventName</span> <span @onclick="(() => DeleteEvent(eventName))" class="oi oi-x removeEvent" aria-hidden="true"></span></li>
+                                    <li>n/a</li>
+                                }
+
+                            </ul>
+                        </div>
+                    </div>
+                    <hr />
+
+                    @* List of Expenses This Day *@
+                    <div class="form-row form-group">
+
+                        <div class="col">
+                            <label style="width:100%"><strong>Expenses</strong></label>
+
+                            @if (DayLedger != null && DayLedger.Count != 0)
+                            {
+                                @foreach (var expenseLine in DayLedger)
+                                {
+                                    <div class="input-group" style="padding-bottom: 5px">
+                                        <input style="width:60%" value="@expenseLine.Description" class="form-control" placeholder="Description" type="text"
+                                               @onchange="@((ChangeEventArgs __e) => expenseLine.Description =  __e.Value.ToString())" />
+
+                                        <input value="@expenseLine.Amount" class="form-control" placeholder="Amount" type="number"
+                                               @onchange="@((ChangeEventArgs __e) => expenseLine.Amount = decimal.Parse(__e.Value.ToString() == "" ? "0" :__e.Value.ToString() ))" />
+
+                                        <span style="padding:10px" @onclick="(() => DeleteLedgerLine(expenseLine.Id))" class="oi oi-x removeEvent" aria-hidden="true"></span>
+                                    </div>
                                 }
                             }
-                            else
-                            {
-                                <li>n/a</li>
-                            }
 
-                        </ul>
+                            <br />
+                            <button type="button" @onclick="AddLedgerLine" class="btn btn-primary"><span class="oi oi-plus"></span></button>
+
+                        </div>
                     </div>
+
                 </div>
 
-                <div class="form-row form-group">
+                <div class="form-row form-group col-sm-6">
                     <div class="col">
                         <label><strong>Add a Note</strong></label>
-                        <textarea id="noteText" class="form-control" rows="3" cols="20" @bind="Note"></textarea>
+                        <textarea id="noteText" class="form-control" @bind="Note"></textarea>
+
                     </div>
                 </div>
+
             </div>
             <div class="modal-footer">
+                <div style="position: absolute; left: 20px; font-size: 150%">
+                    Total: @(DayLedger?.Sum(x=>x.Amount) ?? 0)
+                </div>
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="button" @onclick="ModalAddNote" class="btn btn-primary">Save changes</button>
+                <button type="button" @onclick="SaveJournalEntry" class="btn btn-primary">Save changes</button>
             </div>
         </div>
     </div>
@@ -320,8 +338,36 @@
     public DateTime todaysDate = DateTime.Now;
     private CalendarContainer Container = new CalendarContainer();
     private List<Day> Habits = new List<Day>();
+    private string newEvent;
 
+    private void AddLedgerLine()
+    {
+        if (DayLedger == null)
+        {
+            DayLedger = new List<LedgerLine>();
+        }
 
+        DayLedger.Add(new LedgerLine { Id = Guid.NewGuid(), Amount = 0, Description = "" });
+    }
+
+    private async Task AddEvent()
+    {
+        if (!string.IsNullOrWhiteSpace(newEvent))
+        {
+            // get random hex color
+            var random = new Random();
+            var color = $"#{random.Next(0x1000000):X6}";
+
+            DateState.Container.Settings.Event.Add(new Event() { Name = newEvent, Color = color });
+            newEvent = string.Empty;
+            await localStore.SetItemAsync("Calendar", Container);
+        }
+    }
+
+    private void DeleteLedgerLine(Guid id)
+    {
+        DayLedger.Remove(DayLedger.First(x => x.Id == id));
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -347,14 +393,6 @@
         }
     }
 
-    public static IEnumerable<DateTime> AllDatesInMonth(int year, int month)
-    {
-        int days = DateTime.DaysInMonth(year, month);
-        for (int day = 1; day <= days; day++)
-        {
-            yield return new DateTime(year, month, day);
-        }
-    }
 
     private void NextMonth()
     {
@@ -366,9 +404,9 @@
         currentDate = currentDate.AddMonths(-1);
     }
 
-    private async void ToggleStatus(DateTime date, string note = null, string eventName = null)
+    private async void ToggleStatus(DateTime date, string note = null, string eventName = null, List<LedgerLine> ledger = null, bool markDay = false)
     {
-        if (note == null && eventName == null && date > todaysDate)
+        if (note == null && eventName == null && date > todaysDate && ledger == null)
         {
             return;
         }
@@ -399,15 +437,16 @@
         }
 
         // Day exists?
-        var badHabit = month.Day.Any(x => x.Date == date.Date);
-        if (!badHabit)
+        var doesDayExist = month.Day.Any(x => x.Date == date.Date);
+        if (doesDayExist == false)
         {
             var newBadHabit = new Day
             {
                 Date = date.Date,
                 Note = note ?? "",
-                Event = !string.IsNullOrWhiteSpace(eventName) ? new List<string>() { eventName } : null,
-                DidSomethingBad = note == null && string.IsNullOrWhiteSpace(eventName)
+                Event = !string.IsNullOrWhiteSpace(eventName) ? new List<string>() { eventName } : new List<string>(),
+                DidSomethingBad = markDay,
+                Ledger = ledger
             };
 
             // Save new date
@@ -426,8 +465,10 @@
         }
         else
         {
+            // Day entry exists
             var dayEvent = month.Day.Single(x => x.Date == date.Date).Event;
 
+            // Edit Event
             if (!string.IsNullOrWhiteSpace(eventName))
             {
                 // Remove Event from day
@@ -442,18 +483,29 @@
                 }
             }
 
+            // Edit Note
             if (note != null)
             {
                 month.Day.Single(x => x.Date == date.Date).Note = note;
             }
-            else if (string.IsNullOrWhiteSpace(eventName))
+
+            // Edit ledger
+            if (ledger != null)
+            {
+                month.Day.Single(x => x.Date == date.Date).Ledger = ledger;
+            }
+
+            // Edit day mark
+            if (markDay)
             {
                 bool didSomethingBad = month.Day.Single(x => x.Date == date.Date).DidSomethingBad;
                 month.Day.Single(x => x.Date == date.Date).DidSomethingBad = !didSomethingBad;
 
                 // Remove day record if no info
                 var currentNote = month.Day.Single(x => x.Date == date.Date).Note;
-                if (didSomethingBad && (dayEvent == null || dayEvent.Count == 0) && string.IsNullOrWhiteSpace(currentNote))
+                var currentLedger = month.Day.Single(x => x.Date == date.Date).Ledger;
+                if (didSomethingBad && (dayEvent == null || dayEvent.Count == 0) && string.IsNullOrWhiteSpace(currentNote)
+                    && (currentLedger == null || currentLedger.Count == 0))
                 {
                     month.Day.Remove(month.Day.Single(x => x.Date == date.Date));
                 }
@@ -473,31 +525,42 @@
     }
 
 
-    DateTime NoteDate;
+    DateTime JournalDate;
     protected string Note { get; set; }
     protected List<string> DayEvents { get; set; }
+    public List<LedgerLine> DayLedger { get; set; }
     protected string SelectedEvent { get; set; }
 
 
-    private void AddNote(DateTime date, string note, List<string> events)
+    private void OpenDayJournal(DateTime date, string note, List<string> events, List<LedgerLine> ledger)
     {
-        NoteDate = date;
+        JournalDate = date;
         Note = note;
         DayEvents = events;
-        SelectedEvent = String.Empty;
+        DayLedger = ledger;
+        SelectedEvent = "default";
         JSRuntime.InvokeAsync<bool>("OpenModal");
+        JSRuntime.InvokeVoidAsync("InitHtmlEditor");
     }
 
-
-    private void ModalAddNote()
+    private void SaveJournalEntry()
     {
-        ToggleStatus(NoteDate, Note, SelectedEvent);
+        ToggleStatus(JournalDate, Note, SelectedEvent, DayLedger);
         JSRuntime.InvokeAsync<bool>("CloseModal");
     }
 
     private void DeleteEvent(string eventName)
     {
-        ToggleStatus(NoteDate, Note, eventName);
+        ToggleStatus(JournalDate, Note, eventName);
+    }
+
+    private void AddLineEvent()
+    {
+        if (SelectedEvent != "default")
+        {
+            ToggleStatus(JournalDate, Note, SelectedEvent);
+            SelectedEvent = "default";
+        }
     }
 
     protected override void OnInitialized()

@@ -41,9 +41,12 @@ namespace ThomasCalendar.Models
 
         public List<string> Event { get; set; }
 
+        public List<LedgerLine> Ledger { get; set; }
+
         public Day()
         {
-            this.Event = new List<string>();
+            Event = new List<string>();
+            Ledger = new List<LedgerLine>();
         }
     }
 

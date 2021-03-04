@@ -85,19 +85,17 @@
                 var helperFunctions = new HelperFunctions();
                 helperFunctions.GetDaysWithEventByName(Days, DateState.Container, name);
 
-                var allTime = Days.OrderByDescending(x => x.Date).First().Date;
-
+                var allTime = Days.OrderByDescending(x => x.Date).FirstOrDefault()?.Date;
+                double? daysSinceLastEvent = allTime != null ? ((todaysDate.Date - allTime?.Date)?.TotalDays - 1) : 0;
 
                 <tr>
                     <td>@name</td>
-                    <td>@(((todaysDate.Date - allTime.Date).TotalDays - 1)) days since last occurence</td>
-
+                    <td>@daysSinceLastEvent days since last occurence</td>
                 </tr>
 
             }
         }
     </table>
-
 
 </div>
 
@@ -111,6 +109,7 @@
     protected override async Task OnInitializedAsync()
     {
         Container = await localStore.GetItemAsync<CalendarContainer>("Calendar");
+
         DateState.UpdateCalendar(Container);
         string localDate = await JSRuntime.InvokeAsync<string>("GetLocalDate");
         todaysDate = DateTime.Parse(localDate);
