@@ -28,7 +28,25 @@ namespace ThomasCalendar.Business
 
         public static string GetTotalMonthSpending(CalendarContainer calendar, DateTime currentDate)
         {
-            return "";
+            decimal totalAmount = 0;
+            var currrentYear = calendar.Year.Where(x => x.Name == currentDate.Year.ToString()).FirstOrDefault();
+
+            if (currrentYear != null)
+            {
+                var currentMonth = currrentYear?.Month.Where(x => x.Name == currentDate.ToString("MMMM")).FirstOrDefault();
+
+                if (currentMonth != null)
+                {
+                    //  totalAmount = (decimal)(currentMonth?.Day.Sum(x => x.Ledger.Sum(x => x.Amount)));
+                    if (currentMonth.Day != null)
+                    {
+                        totalAmount = (decimal)(currentMonth?.Day.Where(x=>x.Ledger != null).SelectMany(x => x.Ledger).Sum(x => x.Amount));
+                    }
+
+                }
+            }
+
+            return totalAmount.ToString();
         }
 
         public static IEnumerable<DateTime> GetAllDatesInMonth(int year, int month)

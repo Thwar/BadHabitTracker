@@ -100,8 +100,8 @@
         <span @onclick="NextMonth" class="oi oi-arrow-circle-right arrow"></span>
     </div>
 
-    <div class="col-sm-4">
-        @HelperFunctions.GetTotalMonthSpending(Container, currentDate); 
+    <div class="col-sm-4" style="color: white">
+        Total spent this month:  @HelperFunctions.GetTotalMonthSpending(Container, currentDate)
     </div>
 </div>
 
@@ -209,6 +209,7 @@
 
             <div>Total Relapses this month: @totalMonthRelapses</div>
         }
+
     </div>
 
 </div>
