@@ -85,8 +85,8 @@
                 var helperFunctions = new HelperFunctions();
                 helperFunctions.GetDaysWithEventByName(Days, DateState.Container, name);
 
-                var allTime = Days.OrderByDescending(x => x.Date).FirstOrDefault()?.Date;
-                double? daysSinceLastEvent = allTime != null ? ((todaysDate.Date - allTime?.Date)?.TotalDays - 1) : 0;
+                var allTime = Days.MaxBy(x => x.Date)?.Date;
+                double? daysSinceLastEvent = allTime != null ? (todaysDate.Date - allTime?.Date)?.TotalDays : 0;
 
                 <tr>
                     <td>@name</td>

@@ -16,8 +16,6 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 // Register HttpClient
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-
-
 // Register service
 builder.Services.AddSingleton<CalendarContainer>();
 builder.Services.AddSingleton<DateState>();
@@ -26,8 +24,6 @@ builder.Services.AddSingleton<Quote>();
 
 // Register Blazored.LocalStorage
 builder.Services.AddBlazoredLocalStorage();
-
-
 
 // Register HttpClient with JWT bearer support
 builder.Services.AddSingleton(sp => new HttpClient

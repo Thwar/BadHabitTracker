@@ -1,5 +1,6 @@
 ﻿
 using ActivityTrackerV4.Models;
+using System.Text;
 
 namespace ActivityTrackerV4.Business
 {
@@ -27,11 +28,11 @@ namespace ActivityTrackerV4.Business
         public static string GetTotalMonthSpending(CalendarContainer calendar, DateTime currentDate)
         {
             decimal totalAmount = 0;
-            var currrentYear = calendar.Year.Where(x => x.Name == currentDate.Year.ToString()).FirstOrDefault();
+            var currrentYear = calendar.Year.FirstOrDefault(x => x.Name == currentDate.Year.ToString());
 
             if (currrentYear != null)
             {
-                var currentMonth = currrentYear?.Month.Where(x => x.Name == currentDate.ToString("MMMM")).FirstOrDefault();
+                var currentMonth = (currrentYear?.Month).FirstOrDefault(x => x.Name == currentDate.ToString("MMMM"));
 
                 if (currentMonth != null)
                 {
@@ -67,6 +68,24 @@ namespace ActivityTrackerV4.Business
 
             // Return the color in hex format
             return $"rgb({red}, {green}, 0)";
+        }
+
+        public static string GenerateRatingCss()
+        {
+            var cssBuilder = new StringBuilder();
+
+            for (int rating = 1; rating <= 10; rating++)
+            {
+                string color = GetRatingColor(rating);
+
+                cssBuilder.AppendLine($@"
+            label[data-rating=""{rating}""]:hover, label[data-rating=""{rating}""].active {{
+                background-color: {color} !important;
+            }}
+        ");
+            }
+
+            return cssBuilder.ToString();
         }
 
 
@@ -106,5 +125,6 @@ namespace ActivityTrackerV4.Business
                 }
             }
         }
+
     }
 }

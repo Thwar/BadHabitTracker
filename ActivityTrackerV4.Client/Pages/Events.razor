@@ -1,9 +1,11 @@
 ﻿@page "/events"
 @using ActivityTrackerV4.Business
 @using ActivityTrackerV4.Models
+@using System.Text.Json
 @inject Blazored.LocalStorage.ILocalStorageService localStore
 @inject DateState DateState
 @inject IJSRuntime JSRuntime;
+@inject HttpClient _httpClient
 
 <style>
     .eventEdit:hover {
@@ -92,7 +94,7 @@
 
 @code {
 
-    private CalendarContainer Container = new CalendarContainer();
+    private CalendarContainer Container = new();
     private string newEvent;
 
 
@@ -156,6 +158,8 @@
 
         // Save Calendar
         await localStore.SetItemAsync("Calendar", DateState.Container);
+        await _httpClient.PostAsJsonAsync("api/userdata", JsonSerializer.Serialize(Container));
+
 
         // Refresh nav data?
         DateState.UpdateCalendar(DateState.Container);

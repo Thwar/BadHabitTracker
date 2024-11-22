@@ -1,0 +1,160 @@
+﻿@using ActivityTrackerV4.Models
+@using ActivityTrackerV4.Business
+@inject IJSRuntime JSRuntime
+@inject DateState DateState
+@inject HttpClient _httpClient
+@inject Blazored.LocalStorage.ILocalStorageService localStore
+
+<style>
+    @((MarkupString)HelperFunctions.GenerateRatingCss())
+</style>
+
+<!-- Day Journal Modal Entry -->
+<div class="modal fade" id="addNoteModal" tabindex="-1" role="dialog" aria-labelledby="addNoteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addNoteModalLabel" style="margin: 0 auto; font-weight:bold">Journal Entry @JournalDate.ToShortDateString()</h5>
+                <div type="button" data-dismiss="modal" aria-label="Close" style="cursor: pointer">
+                    <span aria-hidden="true">&times;</span>
+                </div>
+            </div>
+            <div class="modal-body">
+
+                <div class="form-row form-group col-sm-12">
+                    <div class="col">
+                        <textarea id="noteText" class="form-control" @bind="Note" rows="5"></textarea>
+                    </div>
+                </div>
+
+
+                <div class="form-group col-sm-12">
+
+                    <label class="col-sm-12" style="width:100%; border-bottom: 2px solid grey; font-weight:bold">How was your day? (1 - 10)</label>
+
+                    <div class="mt-2">
+                        <!-- Radio buttons for rating from 1 to 10 -->
+                        <div class="btn-group btn-group-toggle d-flex w-100">
+
+                            @for (int i = 1; i <= 10; i++)
+                            {
+                                <label for="dayRating_@i"
+                                       data-rating="@i"
+                                       class="btn btn-outline-primary flex-fill @(DayRating == i ? "active" : "")">
+                                    <input type="radio" id="dayRating_@i" name="dayRating" value="@i" @onchange="OnDayRatingChanged" /> @i
+                                </label>
+                            }
+
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="row col-sm-12">
+                    <div class="col-sm-4">
+                        <div class="form-row form-group">
+
+                            @* Add Event *@
+                            <label class="col-sm-12" style="width:100%; border-bottom: 2px solid grey; font-weight: bold">Activities</label>
+
+                            <div class="input-group col-sm-12 form-group">
+                                <input placeholder="Enter an activity you did today" class="form-control" @bind="_newEvent" style="font-size: 12px; height: 30px" />
+                                <div class="input-group-append">
+                                    <button style="font-size: 12px; height: 30px; width: 60px;" class="btn btn-info" @onclick="AddEvent">Create</button>
+                                </div>
+
+                            </div>
+
+                            <div class="input-group col-sm-12">
+                                <select id="eventDdl" class="form-control selectpicker" @bind="@SelectedEvent" style="font-size: 12px; height: 30px">
+                                    <option value="default">--Select Event--</option>
+
+                                    @if (DateState?.Container?.Settings != null)
+                                    {
+                                        @foreach (var eventName in DateState.Container.Settings.Event)
+                                        {
+                                            string name = eventName.Name;
+
+                                            @if (DayEvents != null && DayEvents.Count != 0 && DayEvents.Contains(name))
+                                            {
+
+                                            }
+                                            else
+                                            {
+                                                <option value="@name">@name</option>
+                                            }
+                                        }
+                                    }
+                                </select>
+                                <div class="input-group-append">
+                                    <button type="button" @onclick="AddLineEvent" class="btn btn-primary" style="font-size: 12px; height: 30px; width: 60px;">Add</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row form-group">
+                            @* List of Events This Day  *@
+
+                            <ul style="list-style: none; padding-left: 25px;">
+                                @if (DayEvents != null && DayEvents.Count != 0)
+                                {
+                                    @foreach (var eventName in DayEvents.Where(x => !string.IsNullOrWhiteSpace(x)))
+                                    {
+                                        var color = DateState.Container.Settings.Event.FirstOrDefault(x => x.Name == eventName);
+
+                                        <li style="display: inline-block">
+                                            <span style=@(color != null ? "background-color:" + color.Color : "") class="badge badge-primary">
+                                                @eventName &nbsp;
+                                                <span @onclick="(() => DeleteLineEvent(eventName))" class="oi oi-x removeEvent" aria-hidden="true"></span>
+                                            </span>
+                                        </li>
+                                    }
+                                }
+
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-8">
+                        @* List of Expenses This Day *@
+                        <div class="form-row form-group">
+
+                            <div class="col">
+                                <label style="width:100%; border-bottom: 2px solid grey;font-weight: bold">Day Expenses</label>
+
+                                @if (DayLedger != null && DayLedger.Count != 0)
+                                {
+                                    @foreach (var expenseLine in DayLedger)
+                                    {
+                                        <div class="input-group" style="padding-bottom: 5px">
+                                            <input style="width:60%" value="@expenseLine.Description" class="form-control" placeholder="Description" type="text"
+                                                   @onchange="@((ChangeEventArgs __e) => expenseLine.Description =  __e.Value.ToString())" />
+
+                                            <input value="@expenseLine.Amount" class="form-control" placeholder="Amount" type="number"
+                                                   @onchange="@((ChangeEventArgs __e) => expenseLine.Amount = decimal.Parse(__e.Value.ToString() == "" ? "0" :__e.Value.ToString() ))" />
+
+                                            <span style="padding:10px" @onclick="(() => DeleteLedgerLine(expenseLine.Id))" class="oi oi-x removeEvent" aria-hidden="true"></span>
+                                        </div>
+                                    }
+                                }
+
+                                <a href="#!" @onclick="AddLedgerLine">Add</a>
+
+                                @* <button type="button" @onclick="AddLedgerLine" class="btn btn-success btn-sm"><span class="oi oi-plus"></span></button> *@
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div style="position: absolute; left: 20px; font-size: 150%">
+                    Total: @(DayLedger?.Sum(x => x.Amount) ?? 0)
+                </div>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" @onclick="SaveJournalEntry" class="btn btn-primary">Save changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+}

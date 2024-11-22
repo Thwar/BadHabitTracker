@@ -67,6 +67,162 @@ body {
     z-index: 5;
 }
 
+.arrow {
+    color: white;
+    font-size: 150%;
+    padding: 10px;
+    cursor: pointer;
+}
+
+.calendar-day__content .note {
+    position: absolute;
+    margin: 40px 10px 10px 15px;
+    cursor: pointer;
+    transition: all 0.5s ease;
+    font-size: 55%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+}
+
+.calendar-day__content .addNote {
+    position: absolute;
+    cursor: pointer;
+    right: 2px;
+    bottom: 2px;
+    opacity: 0;
+    transition: all 0.3s ease;
+    z-index: 50;
+}
+
+.calendar-day__content .noteBox {
+    position: absolute;
+    cursor: pointer;
+    left: 2px;
+    bottom: 2px;
+    font-size: 50%;
+}
+
+.calendar-day__content .totalBox {
+    position: absolute;
+    cursor: pointer;
+    right: 6px;
+    top: 6px;
+    font-size: 50%;
+    border-radius: 20px;
+}
+
+.calendar-day__content:hover > .addNote {
+    opacity: 1;
+}
+
+/* experimental */
+.calendar-day:hover {
+    cursor: pointer;
+    background-color: rgba(78, 135, 146, 0.8);
+    background-color: #f1f1f1;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-day--past:hover {
+    background-color: inherit !important;
+}
+
+.calendar-day-bad .calendar-day__content {
+    background-color: rgba(170, 57, 57, 1);
+}
+
+    .calendar-day-bad .calendar-day__content:hover {
+        background-color: rgba(170, 57, 57, 0.8);
+    }
+
+.removeEvent {
+    font-size: 75%;
+    color: #AA3939;
+    position: relative;
+    top: 0px;
+    cursor: pointer;
+}
+
+    .removeEvent:hover {
+        font-size: 80%;
+    }
+
+.modal-header .close {
+    margin: -1rem -1rem -1rem 0;
+}
+
+.modal-container {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 20px;
+    min-height: 750px;
+}
+
+.modal-dialog {
+    display: flex;
+    align-items: center;
+    min-height: 80vh; /* Minimum height of 80% of the viewport */
+}
+
+.modal-content {
+    min-height: 80vh; /* Minimum height of 80% of the viewport */
+    border-radius: 10px; /* Optional: Adds rounded corners for a modern look */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); /* Optional: Adds a shadow for elevation */
+}
+
+.badge {
+    border-radius: 10px;
+    padding: 4px;
+}
+
+/* Default background color */
+label[data-rating] {
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+/* Dynamically set the hover color */
+/*label[data-rating="1"]:hover, label[data-rating="1"].active {
+    background-color: rgb(255, 0, 0) !important;
+}
+
+label[data-rating="2"]:hover, label[data-rating="2"].active {
+    background-color: rgb(255, 51, 0) !important;
+}
+
+label[data-rating="3"]:hover, label[data-rating="3"].active {
+    background-color: rgb(255, 102, 0) !important;
+}
+
+label[data-rating="4"]:hover, label[data-rating="4"].active {
+    background-color: rgb(255, 153, 0) !important;
+}
+
+label[data-rating="5"]:hover, label[data-rating="5"].active {
+    background-color: rgb(255, 204, 0) !important;
+}
+
+label[data-rating="6"]:hover, label[data-rating="6"].active {
+    background-color: rgb(204, 255, 0) !important;
+}
+
+label[data-rating="7"]:hover, label[data-rating="7"].active {
+    background-color: rgb(153, 255, 0) !important;
+}
+
+label[data-rating="8"]:hover, label[data-rating="8"].active {
+    background-color: rgb(102, 255, 0) !important;
+}
+
+label[data-rating="9"]:hover, label[data-rating="9"].active {
+    background-color: rgb(51, 255, 0) !important;
+}
+
+label[data-rating="10"]:hover, label[data-rating="10"].active {
+    background-color: rgb(0, 255, 0) !important;
+}*/
+
 @media screen and (max-width: 1050px) {
     .calendar-day {
         margin: 0 0 2px;

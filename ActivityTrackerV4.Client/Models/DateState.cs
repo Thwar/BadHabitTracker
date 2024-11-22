@@ -5,7 +5,7 @@ namespace ActivityTrackerV4.Models
     public class DateState
     {
         public CalendarContainer Container { get; private set; }
-        public List<Day> Habits = new List<Day>();
+        public List<Day> Habits = new();
 
         public event Action OnChange;
 
