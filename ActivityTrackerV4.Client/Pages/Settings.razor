@@ -1,0 +1,49 @@
+﻿@page "/settings"
+@inject Blazored.LocalStorage.ILocalStorageService localStore
+@inject IJSRuntime js
+
+<h1>Settings</h1>
+
+<br />
+
+<input id="Button1" type="button" @onclick="exportSettings" value="Export JSON" />
+
+<button @onclick="CheckRuntime">Check Runtime</button>
+@code
+{
+    public object jsonCalendar { get; set; }
+    public async Task exportSettings()
+    {
+        var jsonCalendar = await localStore.GetItemAsync<object>("Calendar");
+        var bytes = System.Text.Encoding.UTF8.GetBytes(jsonCalendar.ToString());
+
+        await SaveAs(js, "settings.json", bytes);
+    }
+
+
+    public static async Task SaveAs(IJSRuntime js, string filename, byte[] data)
+    {
+        await js.InvokeAsync<object>(
+            "saveAsFile",
+            filename,
+            Convert.ToBase64String(data));
+    }
+
+
+    [Inject] protected IJSRuntime jsRuntime { get; set; }
+    private void CheckRuntime()
+    {
+        var isWebAssembly = jsRuntime is IJSInProcessRuntime;
+        if (isWebAssembly)
+        {
+            // The app is running as Blazor WebAssembly
+            Console.WriteLine("This is a Blazor WebAssembly app.");
+        }
+        else
+        {
+            // The app is running as Blazor Server
+            Console.WriteLine("This is a Blazor Server app.");
+        }
+    }
+}
+
