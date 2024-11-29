@@ -28,14 +28,16 @@ builder.Services.AddBlazoredLocalStorage();
 // Register HttpClient with JWT bearer support
 builder.Services.AddSingleton(sp => new HttpClient
 {
-    BaseAddress = new Uri("https://localhost:7086")
+  //  BaseAddress = new Uri("https://localhost:7086")
+    BaseAddress = new Uri("https://blazorauthapi20241129160839.azurewebsites.net")
 });
 
 // Register HttpClient with JWT bearer support
 builder.Services.AddScoped(sp =>
 {
     var localStorage = sp.GetRequiredService<ILocalStorageService>();
-    var httpClient = new HttpClient { BaseAddress = new Uri("https://localhost:7086") };
+   // var httpClient = new HttpClient { BaseAddress = new Uri("https://localhost:7086") };
+    var httpClient = new HttpClient { BaseAddress = new Uri("https://blazorauthapi20241129160839.azurewebsites.net") };
     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GetJwtToken(localStorage));
     return httpClient;
 });
