@@ -10,7 +10,7 @@
 </style>
 
 <!-- Day Journal Modal Entry -->
-<div class="modal fade" id="addNoteModal" tabindex="-1" role="dialog" aria-labelledby="addNoteModalLabel" aria-hidden="true">
+<div class="modal fade" id="addNoteModal" tabindex="-1" role="dialog" aria-labelledby="addNoteModalLabel" >
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -33,7 +33,7 @@
                     <label class="col-sm-12" style="width:100%; border-bottom: 2px solid grey; font-weight:bold">How was your day? (1 - 10)</label>
 
                     <div class="mt-2">
-                        <!-- Radio buttons for rating from 1 to 10 -->
+                        <!-- Radio buttons for Day Rating from 1 to 10 -->
                         <div class="btn-group btn-group-toggle d-flex w-100">
 
                             @for (int i = 1; i <= 10; i++)
@@ -51,7 +51,7 @@
                 </div>
 
                 <div class="row col-sm-12">
-                    <div class="col-sm-4">
+                    <div class="col-sm-5">
                         <div class="form-row form-group">
 
                             @* Add Event *@
@@ -115,7 +115,7 @@
                         </div>
                     </div>
 
-                    <div class="col-sm-8">
+                    <div class="col-sm-7">
                         @* List of Expenses This Day *@
                         <div class="form-row form-group">
 
@@ -127,10 +127,10 @@
                                     @foreach (var expenseLine in DayLedger)
                                     {
                                         <div class="input-group" style="padding-bottom: 5px">
-                                            <input style="width:60%" value="@expenseLine.Description" class="form-control" placeholder="Description" type="text"
+                                            <input style="width: 60%; font-size: 12px; height: 30px" value="@expenseLine.Description" class="form-control" placeholder="Description" type="text"
                                                    @onchange="@((ChangeEventArgs __e) => expenseLine.Description =  __e.Value.ToString())" />
 
-                                            <input value="@expenseLine.Amount" class="form-control" placeholder="Amount" type="number"
+                                            <input style="font-size: 12px; height: 30px" value="@expenseLine.Amount" class="form-control" placeholder="Amount" type="number"
                                                    @onchange="@((ChangeEventArgs __e) => expenseLine.Amount = decimal.Parse(__e.Value.ToString() == "" ? "0" :__e.Value.ToString() ))" />
 
                                             <span style="padding:10px" @onclick="(() => DeleteLedgerLine(expenseLine.Id))" class="oi oi-x removeEvent" aria-hidden="true"></span>

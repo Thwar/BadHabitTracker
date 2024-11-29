@@ -19,7 +19,7 @@ public partial class JournalModal : ComponentBase
 
     // Properties
     [Parameter] public string? Note { get; set; }
-    [Parameter] public int DayRating { get; set; } = 1;
+    [Parameter] public int? DayRating { get; set; }
     [Parameter] public List<string> DayEvents { get; set; } = new();
     [Parameter] public List<LedgerLine>? DayLedger { get; set; }
     [Parameter] public string SelectedEvent { get; set; } = "default";
@@ -29,7 +29,7 @@ public partial class JournalModal : ComponentBase
     private async Task SaveData()
     {
         var helperFunctions = new HelperFunctions();
-        helperFunctions.CalculateBadDays(new List<Day>(), Container);
+//        helperFunctions.CalculateBadDays(new List<Day>(), Container);
         StateHasChanged();
         DateState.UpdateCalendar(Container);
 
@@ -80,7 +80,7 @@ public partial class JournalModal : ComponentBase
         }
     }
 
-    private async Task SaveDay(DateTime date, string? note, List<string> events, List<LedgerLine>? ledger, int dayRating)
+    private async Task SaveDay(DateTime date, string? note, List<string> events, List<LedgerLine>? ledger, int? dayRating)
     {
         var month = GetOrCreateMonth(date);
         UpdateDay(month, new Day
@@ -98,6 +98,9 @@ public partial class JournalModal : ComponentBase
 
     private async Task SaveJournalEntry()
     {
+        // Save settings
+        Container.Settings = DateState.Container.Settings;
+
         await SaveDay(JournalDate, Note, DayEvents, DayLedger, DayRating);
         await JSRuntime.InvokeAsync<bool>("CloseModal");
     }
@@ -113,7 +116,7 @@ public partial class JournalModal : ComponentBase
         DayLedger?.RemoveAll(ledger => ledger.Id == id);
     }
 
-    private async Task AddEvent()
+    private Task AddEvent()
     {
         if (!string.IsNullOrWhiteSpace(_newEvent))
         {
@@ -121,9 +124,11 @@ public partial class JournalModal : ComponentBase
             var color = $"#{random.Next(0x1000000):X6}";
             DateState.Container.Settings.Event.Add(new Event { Name = _newEvent, Color = color });
             _newEvent = string.Empty;
-
         }
+
+        return Task.CompletedTask;
     }
+
     private void OnDayRatingChanged(ChangeEventArgs e)
     {
         if (int.TryParse(e.Value?.ToString(), out int rating))

@@ -21,6 +21,6 @@ namespace BlazorAuthAPI.Models
         [MaxLength(256)]
         public string Email { get; set; }
 
-        public string JsonData { get; set; }
+        public string? JsonData { get; set; }
     }
 }

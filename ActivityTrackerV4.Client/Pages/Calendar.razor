@@ -43,19 +43,11 @@
                 }
 
                 // Get Saved dates
-                Year savedYear = _container.Year.SingleOrDefault(x => x.Name == date.Year.ToString());
-                Month savedMonth = null;
-                if (savedYear != null)
-                {
-                    savedMonth = savedYear.Month.SingleOrDefault(x => x.Name == date.ToString("MMMM"));
-                }
+                Year savedYear = _container.Year.SingleOrDefault(x => x.Name == date.Year.ToString()) ?? new Year();
+                Month savedMonth = savedYear.Month.SingleOrDefault(x => x.Name == date.ToString("MMMM")) ?? new Month();
 
                 // Get bad habit from Month
-                Day dayActivity = null;
-                if (savedMonth != null)
-                {
-                    dayActivity = savedMonth.Day.SingleOrDefault(x => x.Date == date);
-                }
+                Day dayActivity = savedMonth.Day.SingleOrDefault(x => x.Date == date) ?? new Day();
 
                 // Calendar Day Block
                 <li class="calendar-day @(TodaysDate.Date > date.Date ? "calendar-day--good-past" : ""  )"
@@ -67,13 +59,23 @@
 
                         <div class="note">
 
-                            @if (dayActivity?.Event != null)
+                            @if (dayActivity.Event.Any())
                             {
-                                @foreach (var eventName in dayActivity?.Event.Where(x => !string.IsNullOrWhiteSpace(x)))
+                                @foreach (var eventName in dayActivity.Event.Where(x => !string.IsNullOrWhiteSpace(x)))
                                 {
                                     var color = DateState.Container.Settings.Event.FirstOrDefault(x => x.Name == eventName);
 
-                                    <div style=@(color != null ? "background-color:" + color.Color : "") class="badge badge-primary event">@eventName</div>
+                                    if(color != null)
+                                    {
+                                        // Get the appropriate text color
+                                        string textColor = HelperFunctions.GetTextColor(color.Color);
+
+                                        <div style=@($"background-color:{color.Color}; color:{textColor};") class="badge badge-primary event">@eventName</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="badge badge-primary">@eventName</div>
+                                    }
                                 }
                             }
                         </div>
@@ -106,54 +108,50 @@
         </ol>
     </div>
 
-
     <div class="col-sm-3" style="color: white; border-left: 1px white dashed;">
-        Total spent this month:  @HelperFunctions.GetTotalMonthSpending(_container, CurrentDate)
-        <br/><br/>
-        <table class="table" style="color:white">
+        <div class="form-group">
+            Total spent this month: @HelperFunctions.GetTotalMonthSpending(_container, CurrentDate)
+        </div>
+ 
+        <br/>
+   
             @if (DateState?.Container?.Settings != null)
             {
-                <thead>
-                    <tr>
-                        <th>Event</th>
-                        <th>This Month</th>
-                    </tr>
-                </thead>
+            
                 @foreach (var eventName in DateState.Container.Settings.Event)
                 {
-                    string name = eventName.Name;
 
                     // Get the total occurrences of this event in the current month
                     int thisMonthTotal = DateState?.Container.Year
                         .SelectMany(y => y.Month)
-                    .Where(m => m.Name == CurrentDate.ToString("MMMM")) // Match the current month
+                        .Where(m => m.Name == CurrentDate.ToString("MMMM")) // Match the current month
                         .SelectMany(m => m.Day)
                         .SelectMany(d => d.Event)
-                        .Count(e => e == name) ?? 0;
+                        .Count(e => e == eventName.Name) ?? 0;
 
-                    <tr>
-                        <td>@name</td>
-                        <td>@thisMonthTotal</td>
-                    </tr>
+                    // Get the appropriate text color
+                    string textColor = HelperFunctions.GetTextColor(eventName.Color);
+
+                <div style=@($"background-color:{eventName.Color}; color:{textColor};") class="badge badge-primary eventTotals">@eventName.Name x @thisMonthTotal</div>
+
                 }
             }
-        </table>
+   
     </div>
 </div>
 
-
 <div class="row" style=" color: white; margin-bottom: 2em">
     <div class="col-sm-6">
-        Today's date and time: @TodaysDate
+@*         Today's date and time: @TodaysDate *@
     </div>
     <div class="col-sm-6">
 
-        @if (DayEvents.Count != 0)
+@*         @if (DayEvents.Count != 0)
         {
             var totalMonthRelapses = Days.Count(x => x.Date.Month == CurrentDate.Month && x.Date.Year == CurrentDate.Year);
 
             <div>Total Relapses this month: @totalMonthRelapses</div>
-        }
+        } *@
 
     </div>
 </div>

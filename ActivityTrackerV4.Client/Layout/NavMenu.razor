@@ -57,8 +57,9 @@
         
         <AuthorizeView>
             <Authorized>
+
                 <li class="nav-item">
-                    <a href="Identity/Account/Manage" class="nav-link">Hello, @context.User.Identity.Name!</a>
+                    <a href="Settings" class="nav-link">Hello, @DateState.FirstName</a>
                 </li>
                 <li class="nav-item">
                     <button @onclick="Logout" class="btn btn-link nav-link">Logout</button>
@@ -130,7 +131,7 @@
         </div>
 
         <div style="position: absolute; bottom: 30px; width: 100%; color: white; text-align: center; font-size: 90%">
-            Activity Tracker v4 2024 <br /> Created by: Thomas Rosales
+            Activity Tracker v4 2024 
         </div>
 
     </div>
@@ -149,11 +150,10 @@
     }
 
 
-    private CalendarContainer Container = new CalendarContainer();
-    private List<Day> Habits = new List<Day>();
-    private List<Quote>? Quotes = new List<Quote>();
+    private CalendarContainer Container = new();
+    private List<Day> Habits = new();
+    private List<Quote>? Quotes = new();
     public DateTime todaysDate = DateTime.Now;
-
 
     protected override async Task OnInitializedAsync()
     {
@@ -173,9 +173,7 @@
             DateState.UpdateCalendar(new CalendarContainer());
         }
 
-
         //  var quotes = await JSRuntime.InvokeAsync<string>("GetQuotes");
-
         //  Quotes = JsonSerializer.Deserialize<List<Quote>>(quotes, null);
 
         Quotes = await Http.GetFromJsonAsync<List<Quote>>("https://localhost:7142/sample-data/quotes.json");
@@ -194,17 +192,15 @@
     }
 
 
-    Random rnd = new Random();
+    Random rnd = new();
     bool gotQuote = false;
     string quoteDisplay;
     public string GetQuote()
     {
         var quotes = Quotes.OrderBy(x => Guid.NewGuid()).Where(x => x.text.Length < 100).ToList();
-
         var qu = quotes[rnd.Next(quotes.Count)];
 
         quoteDisplay = qu?.text + " - " + qu?.author;
-
         gotQuote = true;
 
         return quoteDisplay;

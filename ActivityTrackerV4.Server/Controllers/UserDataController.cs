@@ -22,7 +22,31 @@ public class UserDataController : ControllerBase
     {
         var email = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var userData = await _context.UserData.SingleOrDefaultAsync(x => x.Email.ToString() == email);
-        return userData != null ? Ok(userData.JsonData) : NotFound();
+
+        if (userData == null)
+            return Ok(null);
+
+        if (string.IsNullOrWhiteSpace(userData.JsonData))
+        {
+            return Ok(null);
+        }
+
+        // Decode jsonData before returning it
+        var decryptedData = EncryptionHelper.Decrypt(userData.JsonData);
+        return Ok(decryptedData);
+    }
+
+    [HttpGet("firstName")]
+    [Authorize]
+    public async Task<ActionResult<string>> GetUserFirstName()
+    {
+        var email = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userData = await _context.UserData.SingleOrDefaultAsync(x => x.Email.ToString() == email);
+
+        if (userData == null)
+            return Ok(null);
+
+        return Ok(userData.FirstName);
     }
 
     [HttpPost]
@@ -32,9 +56,12 @@ public class UserDataController : ControllerBase
         var email = User.FindFirstValue(ClaimTypes.NameIdentifier);
         var userData = await _context.UserData.SingleOrDefaultAsync(x => x.Email.ToString() == email);
 
+        // Encode jsonData before saving it
+        var encryptedData = EncryptionHelper.Encrypt(jsonData);
+
         if (userData != null)
         {
-            userData.JsonData = jsonData;
+            userData.JsonData = encryptedData;
             _context.UserData.Update(userData);
         }
 

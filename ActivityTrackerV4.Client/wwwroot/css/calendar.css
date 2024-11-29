@@ -136,6 +136,13 @@ body {
         background-color: rgba(170, 57, 57, 0.8);
     }
 
+.eventTotals {
+    padding: 7px !important;
+    margin: 5px !important;
+    font-size: 0.9rem; /* Adjust as needed */
+}
+
+
 .removeEvent {
     font-size: 75%;
     color: #AA3939;
@@ -172,8 +179,12 @@ body {
 }
 
 .badge {
-    border-radius: 10px;
     padding: 4px;
+    font-family: Arial, sans-serif;
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.2);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Default background color */
@@ -182,50 +193,10 @@ label[data-rating] {
     cursor: pointer;
 }
 
-/* Dynamically set the hover color */
-/*label[data-rating="1"]:hover, label[data-rating="1"].active {
-    background-color: rgb(255, 0, 0) !important;
-}
-
-label[data-rating="2"]:hover, label[data-rating="2"].active {
-    background-color: rgb(255, 51, 0) !important;
-}
-
-label[data-rating="3"]:hover, label[data-rating="3"].active {
-    background-color: rgb(255, 102, 0) !important;
-}
-
-label[data-rating="4"]:hover, label[data-rating="4"].active {
-    background-color: rgb(255, 153, 0) !important;
-}
-
-label[data-rating="5"]:hover, label[data-rating="5"].active {
-    background-color: rgb(255, 204, 0) !important;
-}
-
-label[data-rating="6"]:hover, label[data-rating="6"].active {
-    background-color: rgb(204, 255, 0) !important;
-}
-
-label[data-rating="7"]:hover, label[data-rating="7"].active {
-    background-color: rgb(153, 255, 0) !important;
-}
-
-label[data-rating="8"]:hover, label[data-rating="8"].active {
-    background-color: rgb(102, 255, 0) !important;
-}
-
-label[data-rating="9"]:hover, label[data-rating="9"].active {
-    background-color: rgb(51, 255, 0) !important;
-}
-
-label[data-rating="10"]:hover, label[data-rating="10"].active {
-    background-color: rgb(0, 255, 0) !important;
-}*/
 
 @media screen and (max-width: 1050px) {
     .calendar-day {
-        margin: 0 0 2px;
+        margin: 0 0 6px;
     }
 
         .calendar-day:nth-child(7n+1)::before {
@@ -250,7 +221,7 @@ label[data-rating="10"]:hover, label[data-rating="10"].active {
     }
 
     .calendar-day__content {
-        padding: 0 0 20%;
+        padding: 0 0 50%;
     }
 }
 

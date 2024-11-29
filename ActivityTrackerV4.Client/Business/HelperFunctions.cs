@@ -70,6 +70,24 @@ namespace ActivityTrackerV4.Business
             return $"rgb({red}, {green}, 0)";
         }
 
+        public static string GetTextColor(string backgroundColor)
+        {
+            // Parse the color (assuming it's in HEX format, e.g., "#RRGGBB").
+            if (backgroundColor.StartsWith("#"))
+            {
+                backgroundColor = backgroundColor.TrimStart('#');
+            }
+
+            int r = Convert.ToInt32(backgroundColor.Substring(0, 2), 16);
+            int g = Convert.ToInt32(backgroundColor.Substring(2, 2), 16);
+            int b = Convert.ToInt32(backgroundColor.Substring(4, 2), 16);
+
+            // Calculate relative luminance
+            double luminance = (0.2126 * r / 255.0) + (0.7152 * g / 255.0) + (0.0722 * b / 255.0);
+
+            // Return white for dark backgrounds, black for light backgrounds
+            return luminance > 0.5 ? "black" : "white";
+        }
         public static string GenerateRatingCss()
         {
             var cssBuilder = new StringBuilder();

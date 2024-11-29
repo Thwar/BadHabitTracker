@@ -108,20 +108,20 @@
 
             DateState.Container.Settings.Event.Add(new Event() { Name = newEvent, Color = color });
             newEvent = string.Empty;
-            await localStore.SetItemAsync("Calendar", Container);
+            await SaveData();
         }
     }
 
     private async Task RemoveEvent(string eventName)
     {
         DateState.Container.Settings.Event.Remove(DateState.Container.Settings.Event.First(x => x.Name == eventName));
-        await localStore.SetItemAsync("Calendar", Container);
+        await SaveData();
     }
 
     protected override async Task OnInitializedAsync()
     {
         Container = await localStore.GetItemAsync<CalendarContainer>("Calendar");
-        DateState.UpdateCalendar(Container);
+       // DateState.UpdateCalendar(Container);
 
         if (DateState.Container == null)
         {
@@ -157,15 +157,19 @@
         }
 
         // Save Calendar
-        await localStore.SetItemAsync("Calendar", DateState.Container);
-        await _httpClient.PostAsJsonAsync("api/userdata", JsonSerializer.Serialize(Container));
-
+        await SaveData();
 
         // Refresh nav data?
         DateState.UpdateCalendar(DateState.Container);
 
         // Close Modal
         await JSRuntime.InvokeAsync<bool>("CloseModal");
+    }
+
+    private async Task SaveData()
+    {
+        await localStore.SetItemAsync("Calendar", DateState.Container);
+        await _httpClient.PostAsJsonAsync("api/userdata", JsonSerializer.Serialize(DateState.Container));
     }
 
     protected override void OnInitialized()

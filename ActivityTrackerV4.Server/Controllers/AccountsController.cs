@@ -46,8 +46,10 @@ public class AccountsController : ControllerBase
         var userModel = new UserModel
         {
             UserId = Guid.NewGuid(),  // Create a unique ID for the user
+            FirstName = model.FirstName,
+            LastName = model.LastName,
             Email = model.Email,
-            JsonData = "{}" // You can initialize this as needed
+            JsonData = null // You can initialize this as needed
         };
 
         // Add userModel to database using Entity Framework

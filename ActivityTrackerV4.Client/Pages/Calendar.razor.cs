@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using System.ComponentModel;
+using System.Net.Http.Json;
 using System.Text.Json;
 using ActivityTrackerV4.Business;
 using ActivityTrackerV4.Models;
@@ -16,12 +17,10 @@ public partial class Calendar : IDisposable
 
     private JournalEntryModalModel ModalModel { get; set; } = new();
     // Properties
-
-    private List<Day> Days = new();
     public DateTime CurrentDate { get; private set; } = DateTime.Now;
     public DateTime TodaysDate { get; private set; } = DateTime.Now;
     protected string? Note { get; set; }
-    protected int DayRating { get; set; } = 1;
+    protected int? DayRating { get; set; } 
     protected List<string> DayEvents { get; set; } = new();
     public List<LedgerLine>? DayLedger { get; set; }
     protected string SelectedEvent { get; set; } = "default";
@@ -44,7 +43,7 @@ public partial class Calendar : IDisposable
         TodaysDate = CurrentDate = await GetLocalDateAsync();
         await RefreshTokenAsync();
         await LoadUserDataAsync();
-        RefreshBadDays();
+        // RefreshBadDays();
     }
 
     public void Dispose()
@@ -77,6 +76,13 @@ public partial class Calendar : IDisposable
             _container = string.IsNullOrEmpty(response)
                 ? new CalendarContainer()
                 : JsonSerializer.Deserialize<CalendarContainer>(response) ?? new CalendarContainer();
+
+
+            DateState.FirstName = await _httpClient.GetStringAsync("api/userdata/firstName");
+
+            StateHasChanged();
+            DateState.UpdateCalendar(_container);
+            await localStore.SetItemAsync("Calendar", _container);
         }
         catch (HttpRequestException ex)
         {
@@ -84,11 +90,6 @@ public partial class Calendar : IDisposable
         }
     }
 
-    private void RefreshBadDays()
-    {
-        var helperFunctions = new HelperFunctions();
-        helperFunctions.CalculateBadDays(new List<Day>(), _container);
-    }
 
     // UI Interaction Methods
 
@@ -98,11 +99,10 @@ public partial class Calendar : IDisposable
         Note = day?.Note;
         DayEvents = day?.Event ?? new List<string>();
         DayLedger = day?.Ledger;
-        DayRating = day?.DayRating ?? 0;
+        DayRating = day?.DayRating;
         SelectedEvent = "default";
         JSRuntime.InvokeAsync<bool>("OpenModal");
         JSRuntime.InvokeVoidAsync("InitHtmlEditor");
-
 
         JSRuntime.InvokeVoidAsync("$('#journalModal').modal", "show");
     }
