@@ -13,8 +13,8 @@
 <link href="/css/calendar.css" rel="stylesheet" />
 
 <div class="row">
-    <div class="col-sm-9">
-        <h1 style="color:white">@CurrentDate.ToString("MMMM") @CurrentDate.Year</h1>
+    <div class="col-lg-12 col-xl-9" style="padding-top: 1.1rem;">
+        <h1 style="color: white; display: inline-block">@CurrentDate.ToString("MMMM") @CurrentDate.Year</h1>
         <span @onclick="PrevMonth" class="oi oi-arrow-circle-left arrow"></span>
         <span @onclick="NextMonth" class="oi oi-arrow-circle-right arrow"></span>
 
@@ -108,7 +108,7 @@
         </ol>
     </div>
 
-    <div class="col-sm-3" style="color: white; border-left: 1px white dashed;">
+    <div class="col-lg-12 col-xl-3" style="color: white; border-left: 1px white dashed; background-color: #0a0b0d">
         <div class="form-group">
             Total spent this month: @HelperFunctions.GetTotalMonthSpending(_container, CurrentDate)
         </div>
@@ -137,22 +137,6 @@
                 }
             }
    
-    </div>
-</div>
-
-<div class="row" style=" color: white; margin-bottom: 2em">
-    <div class="col-sm-6">
-@*         Today's date and time: @TodaysDate *@
-    </div>
-    <div class="col-sm-6">
-
-@*         @if (DayEvents.Count != 0)
-        {
-            var totalMonthRelapses = Days.Count(x => x.Date.Month == CurrentDate.Month && x.Date.Year == CurrentDate.Year);
-
-            <div>Total Relapses this month: @totalMonthRelapses</div>
-        } *@
-
     </div>
 </div>
 

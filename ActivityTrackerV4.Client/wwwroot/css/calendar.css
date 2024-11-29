@@ -9,17 +9,17 @@ html {
 }*/
 
 body {
-    background: #001823;
+    background: #001823 ;
     height: 100%;
     font-family: Helvetica, Arial, serif;
 }
 
 .calendar {
-    margin: 4rem;
+    margin: 4rem 1rem;
     padding: 0;
     list-style: none;
     font-size: 1.4rem;
-    max-width: 1000px;
+    max-width: 1100px;
 }
 
 .calendar-day {
