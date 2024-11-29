@@ -52,7 +52,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowSpecificOrigins",
         builder =>
         {
-            builder.WithOrigins("https://ambitious-river-0ecbf9610.4.azurestaticapps.net/") // Replace with your Blazor app's URL
+            builder.WithOrigins("https://ambitious-river-0ecbf9610.4.azurestaticapps.net") // Replace with your Blazor app's URL
                 .AllowAnyHeader()
                 .AllowAnyMethod()
                 .AllowCredentials();
