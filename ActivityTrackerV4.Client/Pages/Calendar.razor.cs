@@ -1,11 +1,6 @@
-﻿using System.ComponentModel;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Reflection.Metadata;
+﻿using System.Net.Http.Json;
 using System.Text.Json;
-using ActivityTrackerV4.Business;
 using ActivityTrackerV4.Models;
-using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
 namespace ActivityTrackerV4.Pages;
@@ -46,35 +41,14 @@ public partial class Calendar : IDisposable
 
         TodaysDate = CurrentDate = await GetLocalDateAsync();
         await RefreshTokenAsync();
+        await LoadUserDataAsync();
 
-
-        // Check if page refresh occurred
-        var wasRefreshed = await localStore.GetItemAsync<bool>("PageRefreshed");
-        if (wasRefreshed)
-        {
-            isRefreshDetected = true;
-            Console.WriteLine("Page refresh detected. Forcing data refresh...");
-            await LoadUserDataAsync(forceRefresh: true);
-
-            // Reset the flag
-            await localStore.SetItemAsync("PageRefreshed", false);
-        }
-        else
-        {
-            // Normal data load
-            await LoadUserDataAsync();
-        }
-
-        // Subscribe to LocationChanged to detect page refreshes
-        NavigationManager.LocationChanged += OnLocationChanged;
     }
 
     public void Dispose()
     {
         DateState.OnChange -= StateHasChanged;
 
-        // Unsubscribe from the event to prevent memory leaks
-        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 
     // Private Methods
@@ -172,13 +146,6 @@ public partial class Calendar : IDisposable
 
     private void NextMonth() => NavigateMonth(1);
     private void PrevMonth() => NavigateMonth(-1);
-
-    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
-    {
-        // Set the "PageRefreshed" flag when navigating to the current page
-        await localStore.SetItemAsync("PageRefreshed", true);
-    }
-
 
 
 }
