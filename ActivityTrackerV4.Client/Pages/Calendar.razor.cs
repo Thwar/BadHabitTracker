@@ -76,14 +76,17 @@ public partial class Calendar : IDisposable
         {
             var container = await localStore.GetItemAsync<CalendarContainer>("Calendar");
 
+            if (string.IsNullOrWhiteSpace(DateState.FirstName))
+            {
+                DateState.FirstName = await _httpClient.GetStringAsync("api/userdata/firstName");
+            }
+
             if (container == null)
             {
                 var response = await _httpClient.GetStringAsync("api/userdata");
                 _container = string.IsNullOrEmpty(response)
                     ? new CalendarContainer()
                     : JsonSerializer.Deserialize<CalendarContainer>(response) ?? new CalendarContainer();
-
-                DateState.FirstName = await _httpClient.GetStringAsync("api/userdata/firstName");
 
                 StateHasChanged();
                 DateState.UpdateCalendar(_container);

@@ -221,7 +221,7 @@ label[data-rating] {
     }
 
     .calendar-day__content {
-        padding: 0 0 50%;
+        min-height: 90px;
     }
 }
 

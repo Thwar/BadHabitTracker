@@ -36,10 +36,10 @@ button {
     transition: background-color 0.3s ease, transform 0.2s ease;
 }
 
-button:hover {
-    background-color: #0056b3;
-    transform: scale(1.05);
-}
+    button:hover {
+        background-color: #0056b3;
+        transform: scale(1.05);
+    }
 
 .main {
     flex: 1;
@@ -181,7 +181,8 @@ button:hover {
     }
 
     .calendar-day__content .note {
-        margin: 10px 10px 10px 35px !important;
+        padding: 40px 10px 10px 35px !important;
+        margin: 0 !important;
     }
 
     .eventItem {
@@ -191,6 +192,10 @@ button:hover {
     .eventList .list-group-item {
         padding-right: 0 !important;
         padding-left: 0 !important;
+    }
+
+    .calendar {
+        margin: 3rem 1rem 0rem 3rem;
     }
 }
 
@@ -225,5 +230,4 @@ button:hover {
         /* Never collapse the sidebar for wide screens */
         display: block;
     }
-
 }
