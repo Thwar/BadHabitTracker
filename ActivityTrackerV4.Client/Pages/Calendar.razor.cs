@@ -22,10 +22,12 @@ public partial class Calendar : IDisposable
     public DateTime CurrentDate { get; private set; } = DateTime.Now;
     public DateTime TodaysDate { get; private set; } = DateTime.Now;
     protected string? Note { get; set; }
-    protected int? DayRating { get; set; } 
+    protected int? DayRating { get; set; }
     protected List<string> DayEvents { get; set; } = new();
     public List<LedgerLine>? DayLedger { get; set; }
     protected string SelectedEvent { get; set; } = "default";
+
+    private bool isRefreshDetected = false;
 
     // Lifecycle Methods
     protected override void OnInitialized()
@@ -44,13 +46,35 @@ public partial class Calendar : IDisposable
 
         TodaysDate = CurrentDate = await GetLocalDateAsync();
         await RefreshTokenAsync();
-        await LoadUserDataAsync();
-        // RefreshBadDays();
+
+
+        // Check if page refresh occurred
+        var wasRefreshed = await localStore.GetItemAsync<bool>("PageRefreshed");
+        if (wasRefreshed)
+        {
+            isRefreshDetected = true;
+            Console.WriteLine("Page refresh detected. Forcing data refresh...");
+            await LoadUserDataAsync(forceRefresh: true);
+
+            // Reset the flag
+            await localStore.SetItemAsync("PageRefreshed", false);
+        }
+        else
+        {
+            // Normal data load
+            await LoadUserDataAsync();
+        }
+
+        // Subscribe to LocationChanged to detect page refreshes
+        NavigationManager.LocationChanged += OnLocationChanged;
     }
 
     public void Dispose()
     {
         DateState.OnChange -= StateHasChanged;
+
+        // Unsubscribe from the event to prevent memory leaks
+        NavigationManager.LocationChanged -= OnLocationChanged;
     }
 
     // Private Methods
@@ -70,39 +94,66 @@ public partial class Calendar : IDisposable
         }
     }
 
-    private async Task LoadUserDataAsync()
+    private async Task LoadUserDataAsync(bool forceRefresh = false)
     {
         try
         {
-            var container = await localStore.GetItemAsync<CalendarContainer>("Calendar");
+            // Step 1: Check for cached data with a timestamp
+            var cachedData = await localStore.GetItemAsync<CacheWrapper<CalendarContainer>>("CalendarCache");
 
-            if (string.IsNullOrWhiteSpace(DateState.FirstName))
+            if (!forceRefresh && cachedData != null && !IsCacheExpired(cachedData.Timestamp))
             {
-                DateState.FirstName = await _httpClient.GetStringAsync("api/userdata/firstName");
+                // Use cached data if valid
+                _container = cachedData.Data;
+                Console.WriteLine("Loaded data from cache.");
             }
-
-            if (container == null)
+            else
             {
+                // Step 2: Fetch data from the server
                 var response = await _httpClient.GetStringAsync("api/userdata");
                 _container = string.IsNullOrEmpty(response)
                     ? new CalendarContainer()
                     : JsonSerializer.Deserialize<CalendarContainer>(response) ?? new CalendarContainer();
 
-                StateHasChanged();
-                DateState.UpdateCalendar(_container);
-                await localStore.SetItemAsync("Calendar", _container);
-            }
-            else
-            {
-                _container = container;
+                // Update the cache
+                await localStore.SetItemAsync("CalendarCache", new CacheWrapper<CalendarContainer>
+                {
+                    Data = _container,
+                    Timestamp = DateTime.UtcNow
+                });
+
+                Console.WriteLine("Fetched and cached latest data from the server.");
             }
 
+            // Step 3: Fetch additional data if necessary
+            if (string.IsNullOrWhiteSpace(DateState.FirstName))
+            {
+                DateState.FirstName = await _httpClient.GetStringAsync("api/userdata/firstName");
+            }
+
+            // Step 4: Update the state and UI
+            StateHasChanged();
+            DateState.UpdateCalendar(_container);
         }
         catch (HttpRequestException ex)
         {
             Console.WriteLine($"Failed to fetch user data: {ex.Message}");
         }
     }
+
+    // Helper method to check cache expiration
+    private bool IsCacheExpired(DateTime cacheTimestamp, int expirationMinutes = 60)
+    {
+        return DateTime.UtcNow - cacheTimestamp > TimeSpan.FromMinutes(expirationMinutes);
+    }
+
+    // Cache wrapper class to store data with a timestamp
+    private class CacheWrapper<T>
+    {
+        public T Data { get; set; }
+        public DateTime Timestamp { get; set; }
+    }
+
 
 
     // UI Interaction Methods
@@ -128,6 +179,13 @@ public partial class Calendar : IDisposable
 
     private void NextMonth() => NavigateMonth(1);
     private void PrevMonth() => NavigateMonth(-1);
+
+    private async void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        // Set the "PageRefreshed" flag when navigating to the current page
+        await localStore.SetItemAsync("PageRefreshed", true);
+    }
+
 
 
 }

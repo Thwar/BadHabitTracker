@@ -22,5 +22,6 @@ namespace BlazorAuthAPI.Models
         public string Email { get; set; }
 
         public string? JsonData { get; set; }
+
     }
 }
