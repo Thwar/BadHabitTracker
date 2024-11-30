@@ -181,7 +181,8 @@ button {
     }
 
     .calendar-day__content .note {
-        padding: 40px 10px 10px 35px !important;
+        position: relative !important;
+        padding: 10px 10px 10px 35px !important;
         margin: 0 !important;
     }
 
@@ -195,7 +196,7 @@ button {
     }
 
     .calendar {
-        margin: 3rem 1rem 0rem 3rem;
+        margin: 3rem 1rem 1rem 3rem !important;
     }
 }
 
