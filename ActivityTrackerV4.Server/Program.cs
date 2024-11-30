@@ -49,15 +49,18 @@ builder.Services.AddControllers();
 // Enable CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigins",
-        builder =>
-        {
-            builder.WithOrigins("https://ambitious-river-0ecbf9610.4.azurestaticapps.net") // Replace with your Blazor app's URL
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        });
+    options.AddPolicy("AllowSpecificOrigins", policy =>
+    {
+        policy.WithOrigins(
+                "https://localhost:7142",                           // Local development origin
+                "https://ambitious-river-0ecbf9610.4.azurestaticapps.net" // Production origin
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
 });
+
 
 var app = builder.Build();
 

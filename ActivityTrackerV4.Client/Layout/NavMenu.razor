@@ -7,7 +7,9 @@
 @using ActivityTrackerV4.Business
 @using ActivityTrackerV4.Models
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Hosting
 @inject HttpClient Http
+@inject Microsoft.AspNetCore.Components.WebAssembly.Hosting.IWebAssemblyHostEnvironment HostEnvironment
 
 
 <div class="top-row pl-4 navbar navbar-dark">
@@ -176,7 +178,11 @@
         //  var quotes = await JSRuntime.InvokeAsync<string>("GetQuotes");
         //  Quotes = JsonSerializer.Deserialize<List<Quote>>(quotes, null);
 
-        Quotes = await Http.GetFromJsonAsync<List<Quote>>("https://ambitious-river-0ecbf9610.4.azurestaticapps.net/sample-data/quotes.json");
+        var apiBaseAddress = HostEnvironment.IsDevelopment()
+            ? "https://localhost:7142" // Development API
+            : "https://ambitious-river-0ecbf9610.4.azurestaticapps.net"; // Production API
+
+        Quotes = await Http.GetFromJsonAsync<List<Quote>>(apiBaseAddress +"/sample-data/quotes.json");
     }
 
     public double GetRelapseDays()

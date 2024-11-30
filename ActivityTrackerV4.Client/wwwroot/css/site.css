@@ -132,6 +132,14 @@ button:hover {
     color: red;
 }
 
+.spinner-border {
+    margin: 1rem 0;
+}
+
+.alert-danger {
+    margin-top: 1rem;
+}
+
 #blazor-error-ui {
     background: lightyellow;
     bottom: 0;

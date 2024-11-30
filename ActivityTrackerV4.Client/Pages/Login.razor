@@ -13,40 +13,78 @@
         <DataAnnotationsValidator />
         <ValidationSummary />
 
+        <!-- Email Field -->
         <div class="mb-3">
             <label for="email">Email</label>
             <InputText id="email" @bind-Value="loginModel.Email" class="form-control" />
         </div>
 
+        <!-- Password Field -->
         <div class="mb-3">
             <label for="password">Password</label>
             <InputText id="password" @bind-Value="loginModel.Password" type="password" class="form-control" />
         </div>
 
-        <button type="submit" class="btn btn-primary">Login</button>
+        <!-- Error Message -->
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+                <div class="alert alert-danger">@errorMessage</div>
+        }
+
+        <!-- Loading Indicator -->
+        @if (isLoading)
+        {
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+        }
+
+        <button type="submit" class="btn btn-primary" disabled="@isLoading">Login</button>
     </EditForm>
 </div>
 
 @code {
     private LoginModel loginModel = new LoginModel();
+    private bool isLoading = false;
+    private string errorMessage = string.Empty;
 
     private async Task HandleLogin()
     {
-        // Call your API to authenticate and get the token
-        var response = await _httpClient.PostAsJsonAsync("api/accounts/login", loginModel);
+        // Clear previous error messages
+        errorMessage = string.Empty;
 
-        if (response.IsSuccessStatusCode)
+        try
         {
-            var result = await response.Content.ReadFromJsonAsync<LoginResult>();
-            await _localStorageService.SetItemAsync("authToken", result.Token);
+            // Set loading state
+            isLoading = true;
 
-            ((CustomAuthenticationStateProvider)_authenticationStateProvider).NotifyUserAuthentication(result.Token);
-            NavigationManager.NavigateTo("/");
+            // Call your API to authenticate and get the token
+            var response = await _httpClient.PostAsJsonAsync("api/accounts/login", loginModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<LoginResult>();
+                await _localStorageService.SetItemAsync("authToken", result.Token);
+
+                ((CustomAuthenticationStateProvider)_authenticationStateProvider).NotifyUserAuthentication(result.Token);
+                NavigationManager.NavigateTo("/");
+            }
+            else
+            {
+                // Display error message if login fails
+                errorMessage = "Invalid email or password. Please try again.";
+            }
         }
-        else
+        catch (Exception ex)
         {
-            // Handle error response
-            Console.WriteLine("Login failed");
+            // Handle unexpected errors
+            errorMessage = "An error occurred while logging in. Please try again later.";
+            Console.WriteLine($"Login error: {ex.Message}");
+        }
+        finally
+        {
+            // Reset loading state
+            isLoading = false;
         }
     }
 

@@ -1,4 +1,3 @@
-
 using ActivityTrackerV4;
 using ActivityTrackerV4.Business;
 using ActivityTrackerV4.Models;
@@ -8,15 +7,19 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using System.Net.Http.Headers;
 
-
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+// Determine API base address based on environment
+var apiBaseAddress = builder.HostEnvironment.IsDevelopment()
+    ? "https://localhost:7086" // Development API
+    : "https://blazorauthapi20241129160839.azurewebsites.net"; // Production API
+
 // Register HttpClient
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-// Register service
+// Register services
 builder.Services.AddSingleton<CalendarContainer>();
 builder.Services.AddSingleton<DateState>();
 builder.Services.AddSingleton<LedgerLine>();
@@ -26,18 +29,10 @@ builder.Services.AddSingleton<Quote>();
 builder.Services.AddBlazoredLocalStorage();
 
 // Register HttpClient with JWT bearer support
-builder.Services.AddSingleton(sp => new HttpClient
-{
-  //  BaseAddress = new Uri("https://localhost:7086")
-    BaseAddress = new Uri("https://blazorauthapi20241129160839.azurewebsites.net")
-});
-
-// Register HttpClient with JWT bearer support
 builder.Services.AddScoped(sp =>
 {
     var localStorage = sp.GetRequiredService<ILocalStorageService>();
-   // var httpClient = new HttpClient { BaseAddress = new Uri("https://localhost:7086") };
-    var httpClient = new HttpClient { BaseAddress = new Uri("https://blazorauthapi20241129160839.azurewebsites.net") };
+    var httpClient = new HttpClient { BaseAddress = new Uri(apiBaseAddress) };
     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", GetJwtToken(localStorage));
     return httpClient;
 });
@@ -46,9 +41,7 @@ builder.Services.AddScoped(sp =>
 builder.Services.AddAuthorizationCore();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
 
-
 await builder.Build().RunAsync();
-
 
 // Helper function to retrieve JWT token from local storage
 static string? GetJwtToken(ILocalStorageService localStorage)
