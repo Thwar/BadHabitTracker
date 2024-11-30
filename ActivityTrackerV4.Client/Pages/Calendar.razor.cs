@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel;
+using System.Net.Http;
 using System.Net.Http.Json;
+using System.Reflection.Metadata;
 using System.Text.Json;
 using ActivityTrackerV4.Business;
 using ActivityTrackerV4.Models;
@@ -72,17 +74,26 @@ public partial class Calendar : IDisposable
     {
         try
         {
-            var response = await _httpClient.GetStringAsync("api/userdata");
-            _container = string.IsNullOrEmpty(response)
-                ? new CalendarContainer()
-                : JsonSerializer.Deserialize<CalendarContainer>(response) ?? new CalendarContainer();
+            var container = await localStore.GetItemAsync<CalendarContainer>("Calendar");
 
+            if (container == null)
+            {
+                var response = await _httpClient.GetStringAsync("api/userdata");
+                _container = string.IsNullOrEmpty(response)
+                    ? new CalendarContainer()
+                    : JsonSerializer.Deserialize<CalendarContainer>(response) ?? new CalendarContainer();
 
-            DateState.FirstName = await _httpClient.GetStringAsync("api/userdata/firstName");
+                DateState.FirstName = await _httpClient.GetStringAsync("api/userdata/firstName");
 
-            StateHasChanged();
-            DateState.UpdateCalendar(_container);
-            await localStore.SetItemAsync("Calendar", _container);
+                StateHasChanged();
+                DateState.UpdateCalendar(_container);
+                await localStore.SetItemAsync("Calendar", _container);
+            }
+            else
+            {
+                _container = container;
+            }
+
         }
         catch (HttpRequestException ex)
         {

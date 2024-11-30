@@ -12,8 +12,11 @@ namespace ActivityTrackerV4.Models
 
         public event Action OnChange;
 
+        public DateTime LastUpdated { get; set; }
+
         public void UpdateCalendar(CalendarContainer data)
         {
+
             Container = data;
             NotifyStateChanged();
         }
