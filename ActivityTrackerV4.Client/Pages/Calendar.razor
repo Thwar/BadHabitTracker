@@ -57,10 +57,9 @@
                 Day dayActivity = savedMonth.Day.SingleOrDefault(x => x.Date == date) ?? new Day();
 
                 // Calendar Day Block
-                <li class="calendar-day @(TodaysDate.Date > date.Date ? "calendar-day--good-past" : ""  )"
+                <li class="calendar-day @(isCurrentDay ? "highlighted" : "" ) @(TodaysDate.Date > date.Date ? "calendar-day--good-past" : ""  )"
                     data-weekday="@date.ToString("ddd").Substring(0, 3)" data-week=""
-                    @onclick="@(() => OpenDayJournal(date, dayActivity))"
-                    style="@(isCurrentDay ? " border: yellow 3px solid;" : "" )">
+                    @onclick="@(() => OpenDayJournal(date, dayActivity))">
                     <span class="calendar-day__number">@date.Day</span>
                     <div class="calendar-day__content">
 
@@ -87,7 +86,6 @@
                             }
                         </div>
 
-                        @*<div class="note">@(dayActivity.Note.Length > 150 ? dayActivity.Note.Substring(0, 150) + "..." : dayActivity.Note)</div>*@
 
                         <div class="addNote">
                             <button @onclick="@(() => OpenDayJournal(date, dayActivity))" @onclick:stopPropagation="true" class="btn btn-primary">

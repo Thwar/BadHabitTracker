@@ -197,6 +197,7 @@ label[data-rating] {
 @media screen and (max-width: 1050px) {
     .calendar-day {
         margin: 0 0 6px;
+        width: 100%;
     }
 
         .calendar-day:nth-child(7n+1)::before {
