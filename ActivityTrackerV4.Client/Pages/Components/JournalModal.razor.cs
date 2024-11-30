@@ -28,8 +28,6 @@ public partial class JournalModal : ComponentBase
 
     private async Task SaveData()
     {
-        var helperFunctions = new HelperFunctions();
-//        helperFunctions.CalculateBadDays(new List<Day>(), Container);
         StateHasChanged();
         DateState.UpdateCalendar(Container);
 
@@ -39,7 +37,12 @@ public partial class JournalModal : ComponentBase
     private async Task SaveToDatabaseAsync()
     {
         await _httpClient.PostAsJsonAsync("api/userdata", JsonSerializer.Serialize(Container));
-        await localStore.SetItemAsync("Calendar", Container);
+
+        await localStore.SetItemAsync("CalendarCache", new CacheWrapper<CalendarContainer>
+        {
+            Data = Container,
+            Timestamp = DateTime.UtcNow
+        });
     }
 
     private Month GetOrCreateMonth(DateTime date)

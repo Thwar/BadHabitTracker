@@ -108,7 +108,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        Container = await localStore.GetItemAsync<CalendarContainer>("Calendar");
+        var cachedData = await localStore.GetItemAsync<CacheWrapper<CalendarContainer>>("CalendarCache");
+        Container = cachedData.Data;
 
         DateState.UpdateCalendar(Container);
         string localDate = await JSRuntime.InvokeAsync<string>("GetLocalDate");

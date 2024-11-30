@@ -105,7 +105,7 @@
                                         <li style="display: inline-block">
                                             <span style=@(color != null ? "background-color:" + color.Color : "") class="badge badge-primary">
                                                 @eventName &nbsp;
-                                                <span @onclick="(() => DeleteLineEvent(eventName))" class="oi oi-x removeEvent" aria-hidden="true"></span>
+                                                <span @onclick="(() => DeleteLineEvent(eventName))" class="oi oi-x removeEvent"></span>
                                             </span>
                                         </li>
                                     }
@@ -133,7 +133,7 @@
                                             <input style="font-size: 12px; height: 30px" value="@expenseLine.Amount" class="form-control" placeholder="Amount" type="number"
                                                    @onchange="@((ChangeEventArgs __e) => expenseLine.Amount = decimal.Parse(__e.Value.ToString() == "" ? "0" :__e.Value.ToString() ))" />
 
-                                            <span style="padding:10px" @onclick="(() => DeleteLedgerLine(expenseLine.Id))" class="oi oi-x removeEvent" aria-hidden="true"></span>
+                                            <span style="padding:10px" @onclick="(() => DeleteLedgerLine(expenseLine.Id))" class="oi oi-x removeEvent" ></span>
                                         </div>
                                     }
                                 }

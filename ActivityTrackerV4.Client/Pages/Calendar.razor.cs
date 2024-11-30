@@ -147,13 +147,6 @@ public partial class Calendar : IDisposable
         return DateTime.UtcNow - cacheTimestamp > TimeSpan.FromMinutes(expirationMinutes);
     }
 
-    // Cache wrapper class to store data with a timestamp
-    private class CacheWrapper<T>
-    {
-        public T Data { get; set; }
-        public DateTime Timestamp { get; set; }
-    }
-
 
 
     // UI Interaction Methods
