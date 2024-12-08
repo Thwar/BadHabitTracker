@@ -67,7 +67,7 @@
                 await _localStorageService.SetItemAsync("authToken", result.Token);
 
                 ((CustomAuthenticationStateProvider)_authenticationStateProvider).NotifyUserAuthentication(result.Token);
-                NavigationManager.NavigateTo("/");
+                NavigationManager.NavigateTo("/", forceLoad:false);
             }
             else
             {
