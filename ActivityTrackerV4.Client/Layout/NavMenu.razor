@@ -139,15 +139,12 @@
     private CalendarContainer Container = new();
     private List<Day> Habits = new();
     private List<Quote>? Quotes = new();
-    public DateTime todaysDate = DateTime.Now;
 
     protected override async Task OnInitializedAsync()
     {
         var cachedData = await localStore.GetItemAsync<CacheWrapper<CalendarContainer>>("CalendarCache");
         Container = cachedData.Data;
         DateState.UpdateCalendar(Container);
-        string localDate = await JSRuntime.InvokeAsync<string>("GetLocalDate");
-        todaysDate = DateTime.Parse(localDate);
 
         var helperFunctions = new HelperFunctions();
 
@@ -170,17 +167,7 @@
         Quotes = await Http.GetFromJsonAsync<List<Quote>>(apiBaseAddress + "/sample-data/quotes.json");
     }
 
-    public double GetRelapseDays()
-    {
-        var days = ((todaysDate.Date - DateState.GetLastRelapse()?.Date)?.TotalDays - 1) ?? 0;
 
-        if (days < 1)
-        {
-            days = 0;
-        }
-
-        return days;
-    }
 
 
     Random rnd = new();
