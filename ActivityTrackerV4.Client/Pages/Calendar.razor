@@ -20,7 +20,7 @@
 <link href="/css/calendar.css" rel="stylesheet" />
 
 <div class="row">
-    <div class="col-lg-12 col-xl-9" style="padding-top: 1.1rem;">
+    <div class="col-lg-12 col-xl-9 order-2 order-lg-1" style="padding-top: 1.1rem;">
         <h1 style="color: white; display: inline-block; width: 350px;">@CurrentDate.ToString("MMMM") @CurrentDate.Year</h1>
         <span @onclick="PrevMonth" class="oi oi-arrow-circle-left arrow"></span>
         <span @onclick="NextMonth" class="oi oi-arrow-circle-right arrow"></span>
@@ -107,13 +107,20 @@
                             </div>
                         }
 
+                        @if (dayActivity?.Ledger != null &&  (bool)dayActivity?.Ledger.Any())
+                        {
+                            <div class="totalBoxDay badge badge-dark">
+                                @(dayActivity?.Ledger.Sum(x=>x.Amount))
+                            </div>
+                        }
+
                     </div>
                 </li>
             }
         </ol>
     </div>
 
-    <div class="col-lg-12 col-xl-3" style="color: white; border-left: 1px white dashed; background-color: #0a0b0d">
+    <div class="col-lg-12 col-xl-3 order-1 order-lg-2" style="color: white; border-left: 1px white dashed; background-color: #0a0b0d">
         <div class="form-group">
             Total spent this month: @HelperFunctions.GetTotalMonthSpending(_container, CurrentDate)
         </div>
@@ -137,7 +144,10 @@
                     // Get the appropriate text color
                     string textColor = HelperFunctions.GetTextColor(eventName.Color);
 
-                <div style=@($"background-color:{eventName.Color}; color:{textColor};") class="badge badge-primary eventTotals">@eventName.Name x @thisMonthTotal</div>
+                    if (thisMonthTotal > 0)
+                    {
+                        <div style=@($"background-color:{eventName.Color}; color:{textColor};") class="badge badge-primary eventTotals">@eventName.Name x @thisMonthTotal</div>
+                    }
 
                 }
             }

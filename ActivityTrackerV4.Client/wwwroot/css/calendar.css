@@ -112,6 +112,15 @@ body {
     border-radius: 20px;
 }
 
+.calendar-day__content .totalBoxDay {
+    position: absolute;
+    cursor: pointer;
+    right: 6px;
+    bottom: 6px;
+    font-size: 50%;
+    border-radius: 20px;
+}
+
 .calendar-day__content:hover > .addNote {
     opacity: 1;
 }
