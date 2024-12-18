@@ -143,18 +143,22 @@
     protected override async Task OnInitializedAsync()
     {
         var cachedData = await localStore.GetItemAsync<CacheWrapper<CalendarContainer>>("CalendarCache");
-        Container = cachedData.Data;
-        DateState.UpdateCalendar(Container);
+
+        if (cachedData != null)
+        {
+            Container = cachedData.Data;
+            DateState.UpdateCalendar(Container);
+        }
 
         var helperFunctions = new HelperFunctions();
 
-        if (DateState.Container != null)
+        if (DateState?.Container != null)
         {
             helperFunctions.CalculateBadDays(Habits, DateState.Container);
         }
         else
         {
-            DateState.UpdateCalendar(new CalendarContainer());
+            DateState?.UpdateCalendar(new CalendarContainer());
         }
 
         //  var quotes = await JSRuntime.InvokeAsync<string>("GetQuotes");
@@ -166,8 +170,6 @@
 
         Quotes = await Http.GetFromJsonAsync<List<Quote>>(apiBaseAddress + "/sample-data/quotes.json");
     }
-
-
 
 
     Random rnd = new();
