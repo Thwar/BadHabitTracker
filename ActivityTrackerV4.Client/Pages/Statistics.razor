@@ -70,68 +70,44 @@
 
         @if (DateState?.Container?.Settings != null)
         {
-            @*  <thead>
-                <tr>
-                    <th>Event</th>
-                    <th>Last Occurrence</th>
 
-                </tr>
-            </thead>
-            @foreach (var eventName in DateState.Container.Settings.Event)
+            var helperFunctions = new HelperFunctions();
+
+            // Prepare a list of events with daysSinceLastEvent calculated
+            var eventList = DateState.Container.Settings.Event
+            .Select(eventName =>
             {
                 string name = eventName.Name;
-
-
-                var helperFunctions = new HelperFunctions();
                 helperFunctions.GetDaysWithEventByName(Days, DateState.Container, name);
 
                 var allTime = Days.MaxBy(x => x.Date)?.Date;
                 double? daysSinceLastEvent = allTime != null ? (todaysDate.Date - allTime?.Date)?.TotalDays : 0;
 
-                <tr>
-                    <td>@name</td>
-                    <td>@daysSinceLastEvent days since last occurence</td>
-                </tr>
-
-            } *@
-
-                var helperFunctions = new HelperFunctions();
-
-                // Prepare a list of events with daysSinceLastEvent calculated
-                var eventList = DateState.Container.Settings.Event
-                .Select(eventName =>
+                return new
                 {
-                    string name = eventName.Name;
-                    helperFunctions.GetDaysWithEventByName(Days, DateState.Container, name);
+                    Name = name,
+                    DaysSinceLastEvent = daysSinceLastEvent
+                };
+            })
+            .OrderByDescending(e => e.DaysSinceLastEvent) // Sort by daysSinceLastEvent in descending order
+            .ToList();
 
-                    var allTime = Days.MaxBy(x => x.Date)?.Date;
-                    double? daysSinceLastEvent = allTime != null ? (todaysDate.Date - allTime?.Date)?.TotalDays : 0;
-
-                    return new
-                    {
-                        Name = name,
-                        DaysSinceLastEvent = daysSinceLastEvent
-                    };
-                })
-                .OrderByDescending(e => e.DaysSinceLastEvent) // Sort by daysSinceLastEvent in descending order
-                .ToList();
-
-                <thead>
+            <thead>
+                <tr>
+                    <th>Event Name</th>
+                    <th>Days Since Last Occurrence</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var eventItem in eventList)
+                {
                     <tr>
-                        <th>Event Name</th>
-                        <th>Days Since Last Occurrence</th>
+                        <td>@eventItem.Name</td>
+                        <td>@eventItem.DaysSinceLastEvent days since last occurrence</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach (var eventItem in eventList)
-                    {
-                        <tr>
-                            <td>@eventItem.Name</td>
-                            <td>@eventItem.DaysSinceLastEvent days since last occurrence</td>
-                        </tr>
-                    }
-                </tbody>
-            
+                }
+            </tbody>
+
 
         }
     </table>

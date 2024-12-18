@@ -22,7 +22,6 @@ public partial class Calendar : IDisposable
     public List<LedgerLine>? DayLedger { get; set; }
     protected string SelectedEvent { get; set; } = "default";
 
-    private bool isRefreshDetected = false;
 
     // Lifecycle Methods
     protected override void OnInitialized()

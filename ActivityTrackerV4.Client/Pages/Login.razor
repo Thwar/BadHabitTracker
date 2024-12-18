@@ -5,6 +5,7 @@
 @inject NavigationManager NavigationManager
 @inject Blazored.LocalStorage.ILocalStorageService _localStorageService
 @inject AuthenticationStateProvider _authenticationStateProvider
+@inject Blazored.LocalStorage.ILocalStorageService localStore
 
 <h3>Login</h3>
 
@@ -65,6 +66,9 @@
             {
                 var result = await response.Content.ReadFromJsonAsync<LoginResult>();
                 await _localStorageService.SetItemAsync("authToken", result.Token);
+
+                // Delete cache so it always pull the fresh copy
+                await localStore.RemoveItemAsync("CalendarCache");
 
                 ((CustomAuthenticationStateProvider)_authenticationStateProvider).NotifyUserAuthentication(result.Token);
                 NavigationManager.NavigateTo("/", forceLoad:false);
