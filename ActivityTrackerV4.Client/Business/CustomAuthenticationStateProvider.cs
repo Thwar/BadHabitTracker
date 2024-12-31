@@ -1,10 +1,8 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Net.Http.Json;
 using System.Security.Claims;
-using ActivityTrackerV4.Models;
 using ActivityTrackerV4.Pages;
 using Blazored.LocalStorage;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 
 namespace ActivityTrackerV4.Business;
@@ -48,8 +46,8 @@ public class CustomAuthenticationStateProvider : AuthenticationStateProvider
             return new AuthenticationState(new ClaimsPrincipal(identity));
         }
 
-        // Check if token is expired or about to expire in less than 5 minutes
-        if (jwtToken.ValidTo < DateTime.UtcNow.AddMinutes(5))
+        // Check if token is expired or about to expire in less than 50 hours
+        if (jwtToken.ValidTo < DateTime.UtcNow.AddHours(50))
         {
             // Attempt to refresh the token
             var refreshToken = await _localStorageService.GetItemAsync<string>("refreshToken");
